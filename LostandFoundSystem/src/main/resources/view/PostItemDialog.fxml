@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox fx:id="dialogRoot" prefHeight="607.0" prefWidth="688.0" spacing="15.0" style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 5; -fx-border-radius: 5;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.PostItemController">
+    <padding>
+        <Insets bottom="25.0" left="25.0" right="25.0" top="20.0" />
+    </padding>
+
+    <children>
+        <!-- Header -->
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <children>
+                <Label fx:id="titleLabel" style="-fx-font-weight: bold;" text="ITEM INFORMATION" textFill="#710912">
+                    <font><Font size="22.0" /></font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="editNoticeLabel" style="-fx-font-style: italic; -fx-text-fill: #c28d39; -fx-font-size: 11px;" text="🔒 Click EDIT to view identifying information" />
+                <Button fx:id="editButton" managed="false" onAction="#handleEditMode" style="-fx-background-color: #710912; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="EDIT" visible="false" />
+                <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-cursor: hand;" text="✕" textFill="#710912">
+                    <font><Font name="System Bold" size="18.0" /></font>
+                </Button>
+            </children>
+        </HBox>
+
+        <Separator />
+
+        <!-- Scrollable Content -->
+        <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" prefHeight="435.0" prefWidth="632.0" style="-fx-background-color: transparent;">
+            <content>
+                <GridPane hgap="20.0" style="-fx-background-color: white;" vgap="15.0">
+                    <columnConstraints>
+                        <ColumnConstraints maxWidth="343.0" minWidth="211.0" percentWidth="35.0" prefWidth="343.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="346.0" percentWidth="65.0" prefWidth="346.0" />
+                    </columnConstraints>
+
+                    <children>
+                        <!-- Left Column: Basic Info -->
+                        <VBox spacing="10.0" style="-fx-background-color: white;" GridPane.columnIndex="0">
+                            <children>
+                                <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Item Information" textFill="#710912" />
+
+                                <Label text="Item Name" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="itemNameField" promptText="Item name" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Category" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <ComboBox fx:id="categoryPicker" promptText="Select Category" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Color" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="colorField" promptText="Color" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Status" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <ComboBox fx:id="statusPicker" promptText="Select Status" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+                            </children>
+                        </VBox>
+
+                        <!-- Right Column: Reporter & Date -->
+                        <VBox spacing="10.0" style="-fx-background-color: white;" GridPane.columnIndex="1">
+                            <children>
+                                <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Report Information" textFill="#710912" />
+
+                                <Label text="Reported By" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="reporterNameField" promptText="Lastname, Firstname M.I." style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Contact Number" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="contactNumberField" promptText="Contact Number" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Email" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="emailField" promptText="Email" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Reported On" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <DatePicker fx:id="reportedDatePicker" promptText="Select Date" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+                            </children>
+                        </VBox>
+
+                        <!-- Description - Full Width Row -->
+                        <TextArea fx:id="descArea" prefHeight="85.0" promptText="Add details (Last location, distinguishing features)..." style="-fx-control-inner-background: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" wrapText="true" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+
+                        <!-- Image Upload Section - Full Width -->
+                        <VBox alignment="CENTER" onMouseClicked="#handleUploadImage" spacing="10.0" style="-fx-border-color: #710912; -fx-border-style: dashed; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-color: #FFF9F9; -fx-cursor: hand;" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                            <children>
+                                <Label fx:id="imagePlaceholderLabel" text="📷 Click to upload item image" textFill="#710912">
+                                    <font><Font name="System Italic" size="12.0" /></font>
+                                </Label>
+                                <ImageView fx:id="previewImageView" fitHeight="100.0" fitWidth="100.0" preserveRatio="true" visible="false" />
+                                <Button fx:id="removeImageButton" managed="false" onAction="#handleRemoveImage" style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-size: 11px; -fx-background-radius: 5; -fx-cursor: hand;" text="REMOVE IMAGE" visible="false" />
+                            </children>
+                            <padding>
+                                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                            </padding>
+                        </VBox>
+                    </children>
+
+                    <rowConstraints>
+                        <RowConstraints />
+                        <RowConstraints maxHeight="100.0" minHeight="80.0" prefHeight="85.0" />
+                        <RowConstraints maxHeight="-Infinity" minHeight="120.0" percentHeight="0.0" />
+                    </rowConstraints>
+                </GridPane>
+            </content>
+        </ScrollPane>
+
+        <Separator />
+
+        <!-- Bottom Buttons -->
+        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+            <children>
+                <Button fx:id="manualArchiveButton" managed="false" onAction="#handleManualArchive" style="-fx-background-color: #154230; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="📦 ARCHIVE ITEM" visible="false" />
+                <Button fx:id="markFoundButton" managed="false" onAction="#handleMarkAsFound" style="-fx-background-color: #153240; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="✅ MARK AS FOUND" visible="false" />
+                <Button fx:id="claimButton" managed="false" onAction="#handleClaim" style="-fx-background-color: #c28d39; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="CLAIM" visible="false" />
+                <Button fx:id="saveButton" onAction="#handleSave" style="-fx-background-color: #710912; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="SUBMIT REPORT" />
+                <Button fx:id="archiveButton" managed="false" onAction="#handleArchive" style="-fx-background-color: #154230; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="ARCHIVE" visible="false" />
+                <Button fx:id="restoreButton" managed="false" onAction="#handleRestore" style="-fx-background-color: #c28d39; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="🔄 RESTORE" visible="false" />
+                <Button onAction="#handleClose" style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="CANCEL" />
+            </children>
+        </HBox>
+    </children>
+</VBox>

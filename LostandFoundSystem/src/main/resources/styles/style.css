@@ -1,0 +1,70 @@
+.hover-link {
+    -fx-text-fill: #c28d39;
+    -fx-font-weight: bold;
+}
+
+.hover-link:hover {
+    -fx-text-fill: white;
+}
+
+.overview-found{
+    -fx-background-color: rgba(21, 50, 64, 0.3);
+}
+
+.overview-lost{
+    -fx-background-color: rgba(194, 141, 57, 0.3);
+}
+
+.overview-archived{
+    -fx-background-color: rgba(47, 141, 104, 0.4);
+}
+
+.action-button {
+    -fx-transition: all 0.2s ease-in-out;
+}
+
+.label-Logo {
+    -fx-font-family: "Courier New";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+/* Hover effect */
+.action-button:hover {
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 0);
+}
+
+.item-card:hover{
+    -fx-background-color: #A9A9A9;
+    -fx-background-insets: 0;
+    -fx-border-color: #710912;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+    -fx-padding: -2;
+}
+
+/* Pressed effect */
+.action-button:pressed {
+    -fx-scale-x: .90;
+    -fx-scale-y: .90;
+}
+
+/* Disabled state */
+.action-button:disabled {
+    -fx-background-color: #CCCCCC;
+    -fx-text-fill: #888888;
+    -fx-cursor: default;
+}
+
+/* Arrow color */
+.arrow {
+    -fx-background-color:  #710912;
+    -fx-text-fill: #333333;
+}
+
+.combo-box {
+    -fx-background-color: white;
+}
+
