@@ -5,36 +5,62 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-import java.io.ByteArrayInputStream;
-import java.util.Base64;
+
+import java.io.File;
 
 public class AdminItemCardController {
-    @FXML private Label iconLabel;
-    @FXML private Label itemName;
-    @FXML private Label itemDate;
+
+    @FXML private Label     iconLabel;
+    @FXML private Label     itemName;
+    @FXML private Label     itemDate;
+    @FXML private Label     statusLabel;
+    @FXML private Label     typeLabel;
     @FXML private ImageView itemImage;
     @FXML private StackPane imageContainer;
 
-    public void setItemData(String name, String date, String icon, String imageBase64) {
-        itemName.setText(name);
-        itemDate.setText(date);
 
-        if (imageBase64 != null && !imageBase64.isEmpty()) {
+    public void setItem(String name, String date, String imagePath,
+                        String status, String type) {
+
+        itemName.setText(name != null ? name : "—");
+        itemDate.setText(date != null ? date : "—");
+
+        if (statusLabel != null) statusLabel.setText(status != null ? status : "");
+        if (typeLabel   != null) typeLabel.setText(type   != null ? type   : "");
+
+        // Determine the icon character to show when no image is available
+        String icon = switch (type != null ? type : "") {
+            case "Lost"  -> "✕";
+            case "Found" -> "✓";
+            default      -> "?";
+        };
+
+        // Try to load image from local file path
+        if (imagePath != null && !imagePath.isBlank()) {
             try {
-                byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
-                Image image = new Image(new ByteArrayInputStream(imageBytes));
-                itemImage.setImage(image);
-                itemImage.setVisible(true);
-                iconLabel.setVisible(false);
+                File imageFile = new File(imagePath);
+                if (imageFile.exists()) {
+                    Image image = new Image(imageFile.toURI().toString());
+                    itemImage.setImage(image);
+                    itemImage.setVisible(true);
+                    iconLabel.setVisible(false);
+                } else {
+                    showIcon(icon);
+                }
             } catch (Exception e) {
-                iconLabel.setText(icon);
-                iconLabel.setVisible(true);
-                itemImage.setVisible(false);
+                showIcon(icon);
             }
         } else {
-            iconLabel.setText(icon);
-            iconLabel.setVisible(true);
-            itemImage.setVisible(false);
+            showIcon(icon);
         }
+    }
+
+    // =========================================================
+    // HELPER
+    // =========================================================
+    private void showIcon(String icon) {
+        iconLabel.setText(icon);
+        iconLabel.setVisible(true);
+        itemImage.setVisible(false);
     }
 }

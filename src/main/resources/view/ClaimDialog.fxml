@@ -106,12 +106,19 @@
                                        </font>
                                           </Label>
                                           <TextField fx:id="claimantEmailField" promptText="Email Address" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                          <Label text="Remarks:" textFill="#5b5b5b" GridPane.columnIndex="0" GridPane.rowIndex="4">
+                                              <font>
+                                                  <Font name="System Bold" size="13.0" />
+                                              </font>
+                                          </Label>
+                                          <TextField fx:id="remarksField" promptText="Optional remarks" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                       </children>
                                  <rowConstraints>
                                     <RowConstraints />
                                     <RowConstraints />
                                     <RowConstraints />
                                     <RowConstraints />
+                                     <RowConstraints />
                                  </rowConstraints>
                                   </GridPane>
                               </children>

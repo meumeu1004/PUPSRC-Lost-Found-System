@@ -1,5 +1,7 @@
 package application;
 
+import dao.FoundItemDAO;
+import dao.LostItemDAO;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -20,6 +22,27 @@ public class AdminApplication extends Application {
 
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        startAutoArchiveScheduler();
+    }
+
+    private void startAutoArchiveScheduler() {
+        java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
+                .scheduleAtFixedRate(() -> {
+                    LostItemDAO  lostDAO  = new LostItemDAO();
+                    FoundItemDAO foundDAO = new FoundItemDAO();
+
+                    String archiveReason = "Auto Archived (60 Days Unclaimed/Unresolved)";
+
+                    // Archive active items older than 60 days
+                    lostDAO.autoArchiveExpired(60, archiveReason);
+                    foundDAO.autoArchiveExpired(60, archiveReason);
+
+                    // Soft delete archived items older than 60 days
+                    lostDAO.autoDeleteExpired(60);
+                    foundDAO.autoDeleteExpired(60);
+
+                }, 0, 1, java.util.concurrent.TimeUnit.HOURS);
     }
 
     public static void main(String[] args) {

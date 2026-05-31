@@ -1,81 +1,186 @@
 package controller;
 
+import dao.AdminDAO;
+import dao.ClaimDAO;
+import dao.AuditLogDAO;
+import dao.FoundItemDAO;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import java.io.ByteArrayOutputStream;
+import model.Admin;
+import model.Claim;
+import model.FoundItem;
+
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Base64;
 
 public class ClaimController {
 
-    @FXML private VBox claimDialogRoot;
-    @FXML private Label itemNameLabel;
-    @FXML private Label itemCategoryLabel;
-    @FXML private Label itemColorLabel;
-    @FXML private TextField claimantNameField;
-    @FXML private TextField claimantIdField;
-    @FXML private TextField claimantContactField;
-    @FXML private TextField claimantEmailField;
+    // ── FXML fields ──────────────────────────────────────────
+    @FXML private Label    itemNameLabel;
+    @FXML private Label    itemCategoryLabel;
+    @FXML private Label    itemColorLabel;
+
+    @FXML private TextField     claimantNameField;
+    @FXML private TextField     claimantIdField;       // student ID — stored in Claim model only
+    @FXML private TextField     claimantContactField;
+    @FXML private TextField     claimantEmailField;
+    @FXML private TextField     remarksField;
+
     @FXML private PasswordField adminPasswordField;
+
+    @FXML private Label     proofPlaceholder;
     @FXML private ImageView proofPreview;
-    @FXML private Label proofPlaceholder;
-    @FXML private Button removeProofButton;
-    @FXML private Button confirmButton;
+    @FXML private Button    removeProofButton;
+    @FXML private Button    confirmButton;
 
-    private String currentProofImageBase64 = null;
-    private String itemName;
-    private String itemCategory;
-    private String itemColor;
-    private PostItemController parentController;
+    // ── State ────────────────────────────────────────────────
+    private FoundItem targetItem;
+    private String    proofImagePath;
 
-    public void setItemDetails(String name, String category, String color, PostItemController controller) {
-        this.itemName = name;
-        this.itemCategory = category;
-        this.itemColor = color;
-        this.parentController = controller;
+    // ── DAOs ─────────────────────────────────────────────────
+    private final AdminDAO     adminDAO  = new AdminDAO();
+    private final ClaimDAO     claimDAO  = new ClaimDAO();
+    private final FoundItemDAO foundDAO  = new FoundItemDAO();
+    private final AuditLogDAO  auditDAO  = new AuditLogDAO();
 
-        itemNameLabel.setText(name);
-        itemCategoryLabel.setText(category);
-        itemColorLabel.setText(color != null && !color.isEmpty() ? color : "Not specified");
+    // =========================================================
+    // Called by AdminController after loading the dialog
+    // =========================================================
+    public void setTargetItem(FoundItem item) {
+        this.targetItem = item;
+        itemNameLabel.setText(item.getItemName());
+        itemCategoryLabel.setText(item.getCategory());
+        itemColorLabel.setText(item.getColor());
     }
 
     @FXML
-    private void handleUploadProof() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Proof of Ownership Image (REQUIRED)");
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp")
-        );
-        File file = fileChooser.showOpenDialog(null);
-        if (file != null) {
-            try {
-                Image image = new Image(file.toURI().toString(), 200, 200, true, true);
-                proofPreview.setImage(image);
-                proofPreview.setVisible(true);
-                proofPlaceholder.setVisible(false);
-                removeProofButton.setVisible(true);
-                removeProofButton.setManaged(true);
-                currentProofImageBase64 = encodeImageToBase64(file);
+    private void handleConfirmClaim() {
 
-                // Remove red border if it was showing
-                proofPlaceholder.setStyle("");
-            } catch (Exception e) {
-                e.printStackTrace();
-                showAlert("Failed to load image: " + e.getMessage());
-            }
+        // ── 1. Basic input validation ────────────────────────
+        String claimantName  = claimantNameField.getText().trim();
+        String studentId     = claimantIdField.getText().trim();
+        String contactNum    = claimantContactField.getText().trim();
+        String email         = claimantEmailField.getText().trim();
+        String typedPassword = adminPasswordField.getText();
+
+        if (contactNum.isEmpty() && email.isEmpty()) {
+            showAlert("Validation Error",
+                    "Please provide at least a contact number or email address.");
+            return;
+        }
+
+        if (!email.isEmpty() && !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            showAlert("Validation Error", "Invalid email format.");
+            return;
+        }
+
+        if (!contactNum.isEmpty() && !contactNum.matches("^09\\d{9}$")) {
+            showAlert("Validation Error",
+                    "Invalid contact number format. Use 09XXXXXXXXX.");
+            return;
+        }
+
+        if (claimantName.isEmpty()) {
+            showAlert("Validation Error", "Claimant name is required.");
+            return;
+        }
+        if (typedPassword.isEmpty()) {
+            showAlert("Validation Error", "Admin password is required to process a claim.");
+            return;
+        }
+        if (targetItem == null) {
+            showAlert("Error", "No item selected for claim.");
+            return;
+        }
+
+        // ── 2. Verify admin password via bcrypt ──────────────
+        Admin admin = adminDAO.getByUsername("admin");
+
+        if (admin == null) {
+            showAlert("Error", "Admin account not found. Contact system administrator.");
+            return;
+        }
+
+        boolean passwordOk = adminDAO.verifyPassword(typedPassword, admin);
+
+        if (!passwordOk) {
+            showAlert("Incorrect Password", "Admin password is incorrect. Claim not processed.");
+            adminPasswordField.clear();
+            return;
+        }
+
+        String verifiedBy = admin.getUsername();
+
+        Claim claim = new Claim(
+                0,                                            // claimId — auto-generated by DB
+                targetItem.getId(),                                  // foundItemId
+                claimantName,                                        // claimantName
+                studentId.isEmpty()   ? null : studentId,            // studentId (kept in model, not saved to DB)
+                contactNum.isEmpty()  ? null : contactNum,           // claimantContactNum
+                email.isEmpty()       ? null : email,                // claimantContactEmail
+                proofImagePath,                                      // proofImagePath (may be null)
+                null,                                                // claimDate — set to CURRENT_DATE by DAO
+                verifiedBy,                                          // verifiedBy — real admin username
+                remarksField.getText().trim().isEmpty() ? null : remarksField.getText().trim(),       // remarks
+                null,                                               // createdAt — set by DB
+                null                                                // updatedAt — set by DB
+        );
+
+
+        // Call insert + mark
+        boolean ok = claimDAO.insertClaimAndMarkClaimed(claim);
+        if (!ok) {
+            showAlert("Database Error", "Failed to process claim. Please try again.");
+            return;
+        }
+
+        // ── 5. Audit log ─────────────────────────────────────
+        auditDAO.insertLog(
+                targetItem.getId(),
+                "Found",
+                "Marked Claimed",
+                verifiedBy,
+                null,
+                "{\"item_status\":\"Claimed\",\"claimant\":\"" + claimantName + "\"}"
+        );
+
+        // ── 6. Update admin last login timestamp ─────────────
+        adminDAO.updateLastLogin(admin.getAdminId());
+
+        showAlert("Success", "Claim processed successfully. Item marked as Claimed.");
+        handleClose();
+    }
+
+    // =========================================================
+    // Proof image upload
+    // =========================================================
+    @FXML
+    private void handleUploadProof() {
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Select Proof of Ownership");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+        );
+
+        File file = chooser.showOpenDialog(proofPlaceholder.getScene().getWindow());
+
+        if (file != null) {
+            proofImagePath = file.getAbsolutePath();
+            proofPreview.setImage(new Image(file.toURI().toString()));
+            proofPreview.setVisible(true);
+            proofPlaceholder.setVisible(false);
+            removeProofButton.setVisible(true);
+            removeProofButton.setManaged(true);
         }
     }
 
     @FXML
     private void handleRemoveProof() {
-        currentProofImageBase64 = null;
+        proofImagePath = null;
         proofPreview.setImage(null);
         proofPreview.setVisible(false);
         proofPlaceholder.setVisible(true);
@@ -83,104 +188,23 @@ public class ClaimController {
         removeProofButton.setManaged(false);
     }
 
-    private String encodeImageToBase64(File file) {
-        try (FileInputStream fis = new FileInputStream(file);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = fis.read(buffer)) != -1) {
-                baos.write(buffer, 0, bytesRead);
-            }
-            return Base64.getEncoder().encodeToString(baos.toByteArray());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private boolean validateRequiredFields() {
-        StringBuilder missingFields = new StringBuilder();
-
-        if (claimantNameField.getText() == null || claimantNameField.getText().trim().isEmpty()) {
-            missingFields.append("• Claimant Full Name\n");
-            claimantNameField.setStyle("-fx-border-color: red; -fx-border-radius: 5;");
-        } else {
-            claimantNameField.setStyle("");
-        }
-
-        if (claimantIdField.getText() == null || claimantIdField.getText().trim().isEmpty()) {
-            missingFields.append("• ID Number\n");
-            claimantIdField.setStyle("-fx-border-color: red; -fx-border-radius: 5;");
-        } else {
-            claimantIdField.setStyle("");
-        }
-
-        if (currentProofImageBase64 == null) {
-            missingFields.append("• Proof of Ownership Image (REQUIRED)\n");
-            proofPlaceholder.setStyle("-fx-border-color: red; -fx-border-width: 2; -fx-border-radius: 8;");
-        } else {
-            proofPlaceholder.setStyle("");
-        }
-
-        if (missingFields.length() > 0) {
-            showAlert("Missing Required Fields!\n\nPlease provide:\n" + missingFields.toString());
-            return false;
-        }
-
-        return true;
-    }
-
-    @FXML
-    private void handleConfirmClaim() {
-        String enteredPassword = adminPasswordField.getText();
-
-        // Check if password is wrong
-        if (!PasswordManager.verifyPassword(enteredPassword)) {
-            showAlert("Incorrect admin password!");
-            adminPasswordField.clear();
-            adminPasswordField.requestFocus();
-            return;
-        }
-
-        // Validate all required fields (including proof of ownership)
-        if (!validateRequiredFields()) {
-            return;
-        }
-
-        // Process the claim
-        System.out.println("=== CLAIM PROCESSED BY ADMIN ===");
-        System.out.println("Item: " + itemName);
-        System.out.println("Claimant Name: " + claimantNameField.getText());
-        System.out.println("ID Number: " + claimantIdField.getText());
-        System.out.println("Contact: " + claimantContactField.getText());
-        System.out.println("Email: " + claimantEmailField.getText());
-        System.out.println("Proof of Ownership: " + (currentProofImageBase64 != null ? "Uploaded ✓" : "MISSING!"));
-
-        if (parentController != null) {
-            parentController.onClaimConfirmed();
-        }
-
-        showAlert("Claim has been processed for " + claimantNameField.getText());
-        handleClose();
-    }
-
+    // =========================================================
+    // Close dialog
+    // =========================================================
     @FXML
     private void handleClose() {
-        Stage stage = (Stage) claimDialogRoot.getScene().getWindow();
+        Stage stage = (Stage) confirmButton.getScene().getWindow();
         stage.close();
     }
 
-    private void showAlert(String message) {
+    // =========================================================
+    // Helper
+    // =========================================================
+    private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information");
+        alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.setStyle("-fx-background-color: white;");
-        Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
-        okButton.setStyle("-fx-background-color: #710912; -fx-text-fill: white; -fx-cursor: hand;");
-
         alert.showAndWait();
     }
 }
