@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox fx:id="dialogRoot" prefHeight="607.0" prefWidth="688.0" spacing="15.0"
+      style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 5; -fx-border-radius: 5;"
+      xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.PostItemViewController">
+    <padding>
+        <Insets bottom="25.0" left="25.0" right="25.0" top="20.0" />
+    </padding>
+
+    <children>
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <children>
+                <Label fx:id="titleLabel" style="-fx-font-weight: bold;" text="ITEM INFORMATION" textFill="#710912">
+                    <font><Font size="22.0" /></font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#handleClose"
+                        style="-fx-background-color: transparent; -fx-cursor: hand;"
+                        text="✕" textFill="#710912">
+                    <font><Font name="System Bold" size="18.0" /></font>
+                </Button>
+            </children>
+        </HBox>
+
+        <Separator />
+
+        <!-- Scrollable Content -->
+        <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" prefHeight="435.0" prefWidth="632.0" style="-fx-background-color: transparent;">
+            <content>
+                <GridPane hgap="20.0" style="-fx-background-color: white;" vgap="15.0">
+                    <columnConstraints>
+                        <ColumnConstraints maxWidth="343.0" minWidth="211.0" percentWidth="35.0" prefWidth="343.0" />
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="346.0" percentWidth="65.0" prefWidth="346.0" />
+                    </columnConstraints>
+
+                    <children>
+                        <!-- Left Column: Basic Info — all read-only -->
+                        <VBox spacing="10.0" style="-fx-background-color: white;" GridPane.columnIndex="0">
+                            <children>
+                                <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Item Information" textFill="#710912" />
+
+                                <Label text="Item Name" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="itemNameField" editable="false" promptText="Item name"
+                                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Category" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <ComboBox fx:id="categoryPicker" disable="true" promptText="Select Category"
+                                          style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Color" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="colorField" editable="false" promptText="Color"
+                                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Item Type" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <Label fx:id="itemTypeLabel" prefHeight="31.0" prefWidth="76.0"
+                                       style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5; -fx-padding: 6 10 6 10;"
+                                       text="—" textFill="#333333" />
+                            </children>
+                        </VBox>
+
+                        <!-- Right Column: Reporter & Date — all read-only -->
+                        <VBox spacing="10.0" style="-fx-background-color: white;" GridPane.columnIndex="1">
+                            <children>
+                                <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Report Information" textFill="#710912" />
+
+                                <Label text="Reported By" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="reporterNameField" editable="false" prefHeight="27.0" prefWidth="375.0"
+                                           promptText="Lastname, Firstname M.I."
+                                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Contact Number" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="contactNumberField" editable="false" promptText="Contact Number"
+                                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label text="Email" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <TextField fx:id="emailField" editable="false" promptText="Email"
+                                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+
+                                <Label fx:id="itemDateLabel" text="Date Lost" textFill="#5b5b5b">
+                                    <font><Font name="System Bold" size="13.0" /></font>
+                                </Label>
+                                <DatePicker fx:id="itemDatePicker" disable="true" promptText="Select Date"
+                                            style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+                            </children>
+                        </VBox>
+
+                        <!-- Description - Full Width, read-only -->
+                        <TextArea fx:id="descArea" editable="false" prefHeight="85.0"
+                                  promptText="Add details (Last location, distinguishing features)..."
+                                  style="-fx-control-inner-background: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"
+                                  wrapText="true"
+                                  GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+
+                        <!-- Image View Section - read-only, no upload click -->
+                        <VBox alignment="CENTER" spacing="10.0"
+                              style="-fx-border-color: #710912; -fx-border-style: dashed; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-color: #FFF9F9;"
+                              GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                            <children>
+                                <Label fx:id="imagePlaceholderLabel" text="📷 No image provided" textFill="#710912">
+                                    <font><Font name="System Italic" size="12.0" /></font>
+                                </Label>
+                                <ImageView fx:id="previewImageView" fitHeight="100.0" fitWidth="100.0" preserveRatio="true" visible="false" />
+                            </children>
+                            <padding>
+                                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                            </padding>
+                        </VBox>
+                    </children>
+
+                    <rowConstraints>
+                        <RowConstraints />
+                        <RowConstraints maxHeight="100.0" minHeight="80.0" prefHeight="85.0" />
+                        <RowConstraints maxHeight="-Infinity" minHeight="120.0" percentHeight="0.0" />
+                    </rowConstraints>
+                </GridPane>
+            </content>
+        </ScrollPane>
+
+        <Separator />
+
+        <!-- Bottom Buttons — admin actions only, no gaps -->
+        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+            <children>
+                <!-- Edit — always shown in view mode -->
+                <Button fx:id="editButton" onAction="#handleEdit"
+                        style="-fx-background-color: #710912; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
+                        text="EDIT" />
+
+                <!-- Lost item only — shown when item_status = Unresolved -->
+                <Button fx:id="markFoundButton" managed="false" visible="false"
+                        onAction="#handleMarkAsFound"
+                        style="-fx-background-color: #153240; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
+                        text="✅ MARK AS FOUND" />
+
+                <!-- Found item only — shown when item_status = Unclaimed -->
+                <Button fx:id="claimButton" managed="false" visible="false"
+                        onAction="#handleClaim"
+                        style="-fx-background-color: #c28d39; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
+                        text="CLAIM" />
+
+                <!-- Shown when record_status = Active -->
+                <Button fx:id="archiveButton" managed="false" visible="false"
+                        onAction="#handleArchive"
+                        style="-fx-background-color: #154230; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
+                        text="ARCHIVE" />
+
+                <!-- Shown when record_status = Archived -->
+                <Button fx:id="restoreButton" managed="false" visible="false"
+                        onAction="#handleRestore"
+                        style="-fx-background-color: #c28d39; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
+                        text="🔄 RESTORE" />
+
+                <!-- Shown when record_status = Archived -->
+                <Button fx:id="deleteButton" managed="false" visible="false"
+                        onAction="#handleDelete"
+                        style="-fx-background-color: #8B0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
+                        text="🗑 DELETE" />
+
+                <Button onAction="#handleClose"
+                        style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
+                        text="CLOSE" />
+            </children>
+        </HBox>
+    </children>
+</VBox>
