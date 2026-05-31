@@ -1,18 +1,21 @@
 package model;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 public class LostItem extends Item{
-    private String itemStatus;      // Matched, Unmatched
+    private String itemStatus;      // Unresolved, Found
     private String ownerName;
     private String ownerContactNum;
     private String ownerContactEmail;
-    private String dateLost;
+    private LocalDate dateLost;
 
     public LostItem (int id, String itemName, String category, String description,
-                     String color, String dateReported, String imagePath, String recordStatus,
-                     String itemStatus, String ownerName, String ownerContactNum,
-                     String ownerContactEmail, String dateLost) {
+                     String color, String imagePath, String recordStatus, LocalDateTime createdAt, LocalDateTime updatedAt,
+                     String archivedReason, LocalDateTime archivedAt, String itemStatus, String ownerName, String ownerContactNum,
+                     String ownerContactEmail, LocalDate dateLost) {
 
-        super(id, itemName, category, description, color, dateReported, imagePath, recordStatus);
+        super(id, itemName, category, description, color, imagePath, recordStatus, createdAt, updatedAt, archivedReason, archivedAt);
         this.itemStatus = itemStatus;
         this.ownerName = ownerName;
         this.ownerContactNum = ownerContactNum;
@@ -29,7 +32,7 @@ public class LostItem extends Item{
     public String getOwnerContactEmail() {
         return ownerContactEmail; }
 
-    public String getDateLost() {
+    public LocalDate getDateLost() {
         return dateLost; }
 
     public String getItemStatus() {

@@ -3,6 +3,7 @@ module lostandfoundsystem {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.sql;
+    requires jbcrypt;
 
     exports application;
 
@@ -13,4 +14,5 @@ module lostandfoundsystem {
     exports controller;
     exports model;
     exports database;
+    exports dao;
 }
