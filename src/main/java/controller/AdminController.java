@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter;
 
 public class AdminController {
 
-    // ── FXML fields ──────────────────────────────────────────
+  // ── FXML fields ──────────────────────────────────────────
     @FXML private Label     dashboardTitleLabel;
     @FXML private Label     totalLostLabel;
     @FXML private Label     totalFoundLabel;
@@ -58,12 +58,6 @@ public class AdminController {
     @FXML private Button archiveButton;
     @FXML private Button backToMainButton;
     @FXML private Button recentlyDeletedButton;
-
-    @FXML private Button normalPostLost;
-    @FXML private Button normalPostFound;
-    @FXML private Button normalArchive;
-    @FXML private Button archiveBackToMain;
-    @FXML private Button archiveRecentlyDeleted;
  
 
     // ── DAOs ─────────────────────────────────────────────────
