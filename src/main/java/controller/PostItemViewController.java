@@ -14,6 +14,9 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.FoundItem;
 import model.LostItem;
+import util.PasswordGuard;
+import database.DBConnection;
+import controller.PasswordManager;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -75,8 +78,18 @@ public class PostItemViewController {
     // =========================================================
     // EDIT — opens PostItemForm pre-filled
     // =========================================================
+
+
     @FXML
     private void handleEdit() {
+
+        // ── GUARD ─────────────────────────────────────────────
+        if (!PasswordGuard.verify(
+                editButton.getScene().getWindow(),
+                "Edit Item",
+                "Enter admin password to edit this item:")) return;
+        // ── END GUARD ─────────────────────────────────────────
+
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/view/PostItemForm.fxml"));
@@ -107,16 +120,25 @@ public class PostItemViewController {
     @FXML
     private void handleMarkAsFound() {
         if (existingLost == null) return;
-        boolean ok = lostDAO.markFound(existingLost.getId());
-        if (ok) {
-            auditDAO.insertLog(existingLost.getId(), "Lost",
-                    "Marked Found", "admin",
-                    "{\"item_status\": \"Unresolved\"}",
-                    "{\"item_status\": \"Found\"}");
-            if (adminController != null) adminController.refreshDashboard();
-            handleClose();
-        } else {
-            showAlert("Error", "Failed to update item status.");
+
+        try {
+            boolean ok = lostDAO.markFound(existingLost.getId());
+            if (ok) {
+                auditDAO.insertLog(existingLost.getId(), "Lost",
+                        "Marked Found", "admin",
+                        "{\"item_status\": \"Unresolved\"}",
+                        "{\"item_status\": \"Found\"}");
+                if (adminController != null) adminController.refreshDashboard();
+                handleClose();
+            } else {
+                showAlert("Error", "Failed to update item status.");
+            }
+        } catch (DBConnection.NoConnectionException e) {
+            PasswordManager.showAlert("No Internet",
+                    "Please connect to the Internet and try again.");
+        } catch (Exception e) {
+            PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
+            e.printStackTrace();
         }
     }
 
@@ -151,6 +173,12 @@ public class PostItemViewController {
     // =========================================================
     @FXML
     private void handleArchive() {
+        if (!PasswordGuard.verify(
+                archiveButton.getScene().getWindow(),
+                "Archive Item",
+                "Enter admin password to archive this item:")) return;
+
+        // outer try — handles FXML loading
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/view/ArchiveReasonDialog.fxml"));
@@ -165,69 +193,147 @@ public class PostItemViewController {
             stage.showAndWait();
 
             String reason = ctrl.getSelectedReason();
-            if (reason == null) return; // admin cancelled
+            if (reason == null) return;
 
-            if (existingLost != null) {
-                lostDAO.archive(existingLost.getId(), reason);
-                auditDAO.insertLog(existingLost.getId(), "Lost",
-                        "Archived", "admin",
-                        "{\"record_status\": \"Active\"}",
-                        "{\"record_status\": \"Archived\", \"reason\": \"" + reason + "\"}");
-            } else if (existingFound != null) {
-                foundDAO.archive(existingFound.getId(), reason);
-                auditDAO.insertLog(existingFound.getId(), "Found",
-                        "Archived", "admin",
-                        "{\"record_status\": \"Active\"}",
-                        "{\"record_status\": \"Archived\", \"reason\": \"" + reason + "\"}");
+            // inner try — handles DAO calls
+            try {
+                if (existingLost != null) {
+                    lostDAO.archive(existingLost.getId(), reason);
+                    auditDAO.insertLog(existingLost.getId(), "Lost",
+                            "Archived", "admin",
+                            "{\"record_status\": \"Active\"}",
+                            "{\"record_status\": \"Archived\", \"reason\": \"" + reason + "\"}");
+                } else if (existingFound != null) {
+                    foundDAO.archive(existingFound.getId(), reason);
+                    auditDAO.insertLog(existingFound.getId(), "Found",
+                            "Archived", "admin",
+                            "{\"record_status\": \"Active\"}",
+                            "{\"record_status\": \"Archived\", \"reason\": \"" + reason + "\"}");
+                }
+                if (adminController != null) adminController.refreshDashboard();
+                handleClose();
+
+            } catch (DBConnection.NoConnectionException e) {
+                PasswordManager.showAlert("No Internet",
+                        "Please connect to the Internet and try again.");
+            } catch (Exception e) {
+                PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
+                e.printStackTrace();
             }
 
-            if (adminController != null) adminController.refreshDashboard();
-            handleClose();
-
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // FXML failed to load
         }
     }
-
+  
     // =========================================================
     // RESTORE
     // =========================================================
     @FXML
     private void handleRestore() {
-        if (existingLost != null) {
-            lostDAO.restore(existingLost.getId());
-            auditDAO.insertLog(existingLost.getId(), "Lost",
-                    "Restored", "admin",
-                    "{\"record_status\": \"Archived\"}",
-                    "{\"record_status\": \"Active\"}");
-        } else if (existingFound != null) {
-            foundDAO.restore(existingFound.getId());
-            auditDAO.insertLog(existingFound.getId(), "Found",
-                    "Restored", "admin",
-                    "{\"record_status\": \"Archived\"}",
-                    "{\"record_status\": \"Active\"}");
+        if (!PasswordGuard.verify(
+                restoreButton.getScene().getWindow(),
+                "Restore Item",
+                "Enter admin password to restore this item:")) return;
+
+        try {
+            if (existingLost != null) {
+                lostDAO.restore(existingLost.getId());
+                auditDAO.insertLog(existingLost.getId(), "Lost",
+                        "Restored", "admin",
+                        "{\"record_status\": \"Archived\"}",
+                        "{\"record_status\": \"Active\"}");
+            } else if (existingFound != null) {
+                foundDAO.restore(existingFound.getId());
+                auditDAO.insertLog(existingFound.getId(), "Found",
+                        "Restored", "admin",
+                        "{\"record_status\": \"Archived\"}",
+                        "{\"record_status\": \"Active\"}");
+            }
+            if (adminController != null) adminController.refreshDashboard();
+            handleClose();
+
+        } catch (DBConnection.NoConnectionException e) {
+            PasswordManager.showAlert("No Internet",
+                    "Please connect to the Internet and try again.");
+        } catch (Exception e) {
+            PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
+            e.printStackTrace();
         }
-        if (adminController != null) adminController.refreshDashboard();
-        handleClose();
     }
+
 
     // =========================================================
     // DELETE (soft delete → Deleted)
     // =========================================================
     @FXML
     private void handleDelete() {
-        if (existingLost != null) {
-            lostDAO.delete(existingLost.getId());
-            auditDAO.insertLog(existingLost.getId(), "Lost",
-                    "Deleted", "admin", null, null);
-        } else if (existingFound != null) {
-            foundDAO.delete(existingFound.getId());
-            auditDAO.insertLog(existingFound.getId(), "Found",
-                    "Deleted", "admin", null, null);
+
+        // ── GUARD ─────────────────────────────────────────────
+        if (!PasswordGuard.verify(
+                deleteButton.getScene().getWindow(),
+                "Delete Item",
+                "Enter admin password to permanently delete this item:")) return;
+        // ── END GUARD ─────────────────────────────────────────
+
+        // Extra confirmation — deletion is harder to undo than archive
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Delete");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Move this item to the Recycle Bin? It can be restored later.");
+        confirm.getDialogPane().setStyle("-fx-background-color: white;");
+
+        Button okBtn = (Button) confirm.getDialogPane().lookupButton(ButtonType.OK);
+        if (okBtn != null) {
+            okBtn.setStyle("-fx-background-color: #710912; -fx-text-fill: white; -fx-cursor: hand;");
         }
-        if (adminController != null) adminController.refreshDashboard();
-        handleClose();
+
+        confirm.showAndWait().ifPresent(response -> {
+            if (response != ButtonType.OK) return;
+
+            try {
+
+                if (existingLost != null) {
+                    lostDAO.delete(existingLost.getId());
+                    auditDAO.insertLog(existingLost.getId(), "Lost",
+                            "Deleted", "admin",
+                            "{\"record_status\": \"Active\"}",
+                            "{\"record_status\": \"Deleted\"}");
+
+                } else if (existingFound != null) {
+                    foundDAO.delete(existingFound.getId());
+                    auditDAO.insertLog(existingFound.getId(), "Found",
+                            "Deleted", "admin",
+                            "{\"record_status\": \"Active\"}",
+                            "{\"record_status\": \"Deleted\"}");
+                }
+
+                if (adminController != null) {
+                    adminController.refreshDashboard();
+                }
+
+                handleClose();
+
+            } catch (DBConnection.NoConnectionException e) {
+
+                PasswordManager.showAlert(
+                        "No Internet",
+                        "Please connect to the Internet and try again."
+                );
+
+            } catch (Exception e) {
+
+                PasswordManager.showAlert(
+                        "Error",
+                        "Something went wrong. Please try again."
+                );
+
+                e.printStackTrace();
+            }
+        });
     }
+
+
 
     // =========================================================
     // CLOSE

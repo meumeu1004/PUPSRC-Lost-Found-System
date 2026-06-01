@@ -11,6 +11,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.FoundItem;
 import model.LostItem;
+import database.DBConnection;
+import controller.PasswordManager;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -114,109 +116,121 @@ public class PostItemFormController {
                 ? itemDatePicker.getValue()
                 : LocalDate.now();
 
-        switch (mode) {
+        try {
 
-            case "new_lost" -> {
-                LostItem item = new LostItem(
-                        0,
-                        itemNameField.getText().trim(),
-                        categoryPicker.getValue(),
-                        descArea.getText().trim(),
-                        colorField.getText().trim(),
-                        imagePath,
-                        "Active",
-                        null,                               // createdAt — set by DB
-                        null,                                        // updatedAt — set by DB
-                        null,
-                        null,
-                        "Unresolved",
-                        reporterNameField.getText().trim(),
-                        contactNumberField.getText().trim(),
-                        emailField.getText().trim(),
-                        pickedDate
-                );
-                boolean ok = lostDAO.insert(item);
-                if (ok) auditDAO.insertLog(0, "Lost", "Created Report",
-                        "user", null,
-                        "{\"item_name\": \"" + item.getItemName() + "\"}");
-                handleResult(ok, "Lost item report submitted.");
+            switch (mode) {
+
+                case "new_lost" -> {
+                    LostItem item = new LostItem(
+                            0,
+                            itemNameField.getText().trim(),
+                            categoryPicker.getValue(),
+                            descArea.getText().trim(),
+                            colorField.getText().trim(),
+                            imagePath,
+                            "Active",
+                            null,
+                            null,
+                            null,
+                            null,
+                            "Unresolved",
+                            reporterNameField.getText().trim(),
+                            contactNumberField.getText().trim(),
+                            emailField.getText().trim(),
+                            pickedDate
+                    );
+                    boolean ok = lostDAO.insert(item);
+                    if (ok) auditDAO.insertLog(0, "Lost", "Created Report",
+                            "user", null,
+                            "{\"item_name\": \"" + item.getItemName() + "\"}");
+                    handleResult(ok, "Lost item report submitted.");
+                }
+
+                case "new_found" -> {
+                    FoundItem item = new FoundItem(
+                            0,
+                            itemNameField.getText().trim(),
+                            categoryPicker.getValue(),
+                            descArea.getText().trim(),
+                            colorField.getText().trim(),
+                            imagePath,
+                            "Active",
+                            "Unclaimed",
+                            null,
+                            null,
+                            null,
+                            null,
+                            reporterNameField.getText().trim(),
+                            contactNumberField.getText().trim(),
+                            emailField.getText().trim(),
+                            pickedDate
+                    );
+                    boolean ok = foundDAO.insert(item);
+                    if (ok) auditDAO.insertLog(0, "Found", "Created Report",
+                            "user", null,
+                            "{\"item_name\": \"" + item.getItemName() + "\"}");
+                    handleResult(ok, "Found item report submitted.");
+                }
+
+                case "edit_lost" -> {
+                    LostItem updated = new LostItem(
+                            existingLost.getId(),
+                            itemNameField.getText().trim(),
+                            categoryPicker.getValue(),
+                            descArea.getText().trim(),
+                            colorField.getText().trim(),
+                            imagePath != null ? imagePath : existingLost.getImagePath(),
+                            existingLost.getRecordStatus(),
+                            existingLost.getCreatedAt(),
+                            existingLost.getUpdatedAt(),
+                            existingLost.getArchivedReason(),
+                            existingLost.getArchivedAt(),
+                            existingLost.getItemStatus(),
+                            reporterNameField.getText().trim(),
+                            contactNumberField.getText().trim(),
+                            emailField.getText().trim(),
+                            pickedDate
+                    );
+                    boolean ok = lostDAO.update(updated);
+                    if (ok) auditDAO.insertLog(updated.getId(), "Lost",
+                            "Updated Item Details", "admin", null, null);
+                    handleResult(ok, "Lost item updated.");
+                }
+
+                case "edit_found" -> {
+                    FoundItem updated = new FoundItem(
+                            existingFound.getId(),
+                            itemNameField.getText().trim(),
+                            categoryPicker.getValue(),
+                            descArea.getText().trim(),
+                            colorField.getText().trim(),
+                            imagePath != null ? imagePath : existingFound.getImagePath(),
+                            existingFound.getRecordStatus(),
+                            existingFound.getItemStatus(),
+                            existingFound.getCreatedAt(),
+                            existingFound.getUpdatedAt(),
+                            existingFound.getArchivedReason(),
+                            existingFound.getArchivedAt(),
+                            reporterNameField.getText().trim(),
+                            contactNumberField.getText().trim(),
+                            emailField.getText().trim(),
+                            pickedDate
+                    );
+                    boolean ok = foundDAO.update(updated);
+                    if (ok) auditDAO.insertLog(updated.getId(), "Found",
+                            "Updated Item Details", "admin", null, null);
+                    handleResult(ok, "Found item updated.");
+                }
             }
 
-            case "new_found" -> {
-                FoundItem item = new FoundItem(
-                        0,
-                        itemNameField.getText().trim(),
-                        categoryPicker.getValue(),
-                        descArea.getText().trim(),
-                        colorField.getText().trim(),
-                        imagePath,
-                        "Active",
-                        "Unclaimed",
-                        null,                               // createdAt — set by DB
-                        null,                                        // updatedAt — set by DB
-                        null,                                       // archive reason
-                        null,                                       // archived_at
-                        reporterNameField.getText().trim(),
-                        contactNumberField.getText().trim(),
-                        emailField.getText().trim(),
-                        pickedDate
-                );
-                boolean ok = foundDAO.insert(item);
-                if (ok) auditDAO.insertLog(0, "Found", "Created Report",
-                        "user", null,
-                        "{\"item_name\": \"" + item.getItemName() + "\"}");
-                handleResult(ok, "Found item report submitted.");
-            }
+        } catch (DBConnection.NoConnectionException e) {
+            PasswordManager.showAlert("No Internet",
+                    "Please connect to the Internet and try again.");
 
-            case "edit_lost" -> {
-                LostItem updated = new LostItem(
-                        existingLost.getId(),
-                        itemNameField.getText().trim(),
-                        categoryPicker.getValue(),
-                        descArea.getText().trim(),
-                        colorField.getText().trim(),
-                        imagePath != null ? imagePath : existingLost.getImagePath(),
-                        existingLost.getRecordStatus(),
-                        existingLost.getCreatedAt(),
-                        existingLost.getUpdatedAt(),
-                        existingLost.getArchivedReason(),
-                        existingLost.getArchivedAt(),
-                        existingLost.getItemStatus(),
-                        reporterNameField.getText().trim(),
-                        contactNumberField.getText().trim(),
-                        emailField.getText().trim(),
-                        pickedDate
-                );
-                boolean ok = lostDAO.update(updated);
-                if (ok) auditDAO.insertLog(updated.getId(), "Lost",
-                        "Updated Item Details", "admin", null, null);
-                handleResult(ok, "Lost item updated.");
-            }
-
-            case "edit_found" -> {
-                FoundItem updated = new FoundItem(
-                        existingFound.getId(),
-                        itemNameField.getText().trim(),
-                        categoryPicker.getValue(),
-                        descArea.getText().trim(),
-                        colorField.getText().trim(),
-                        imagePath != null ? imagePath : existingFound.getImagePath(),
-                        existingFound.getRecordStatus(),
-                        existingFound.getItemStatus(),
-                        existingFound.getCreatedAt(),
-                        existingFound.getUpdatedAt(),
-                        existingFound.getArchivedReason(),
-                        existingFound.getArchivedAt(),
-                        reporterNameField.getText().trim(),
-                        contactNumberField.getText().trim(),
-                        emailField.getText().trim(),
-                        pickedDate
-                );
-                boolean ok = foundDAO.update(updated);
-                if (ok) auditDAO.insertLog(updated.getId(), "Found",
-                        "Updated Item Details", "admin", null, null);
-                handleResult(ok, "Found item updated.");
-            }
+        } catch (Exception e) {
+            PasswordManager.showAlert("Error",
+                    "Something went wrong. Please try again.");
+            e.printStackTrace();
         }
     }
 

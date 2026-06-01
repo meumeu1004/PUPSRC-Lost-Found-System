@@ -13,6 +13,8 @@ import javafx.stage.Stage;
 import model.Admin;
 import model.Claim;
 import model.FoundItem;
+import database.DBConnection;
+import controller.PasswordManager;
 
 import java.io.File;
 
@@ -97,6 +99,7 @@ public class ClaimController {
         }
 
         // ── 2. Verify admin password via bcrypt ──────────────
+    try {
         Admin admin = adminDAO.getByUsername("admin");
 
         if (admin == null) {
@@ -152,6 +155,18 @@ public class ClaimController {
 
         showAlert("Success", "Claim processed successfully. Item marked as Claimed.");
         handleClose();
+    } catch (DBConnection.NoConnectionException e) {
+
+        showAlert("No Internet",
+                "Please connect to the Internet and try again.");
+
+    } catch (Exception e) {
+
+        showAlert("Error",
+                "Something went wrong. Please try again.");
+
+        e.printStackTrace();
+        }
     }
 
     // =========================================================

@@ -21,7 +21,7 @@ public class LostItemDAO {
                 SELECT * FROM lost_items
                 WHERE record_status = 'Active'
                 ORDER BY created_at DESC
-                LIMIT 100
+                LIMIT 300
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -30,11 +30,12 @@ public class LostItemDAO {
 
             while (rs.next()) items.add(map(rs));
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        return items;
+            return items;
     }
 
     // =========================================================
@@ -84,7 +85,7 @@ public class LostItemDAO {
             default          -> "ORDER BY created_at DESC\n";
         });
 
-        sql.append("LIMIT 200");
+        sql.append("LIMIT 300");
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -111,6 +112,8 @@ public class LostItemDAO {
                 while (rs.next()) items.add(map(rs));
             }
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -141,11 +144,12 @@ public class LostItemDAO {
 
             while (rs.next()) items.add(map(rs));
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        return items;
+            return items;
     }
 
     // =========================================================
@@ -167,6 +171,8 @@ public class LostItemDAO {
 
             while (rs.next()) items.add(map(rs));
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -181,6 +187,37 @@ public class LostItemDAO {
         return filter(keyword, null, null, "newest");
     }
 
+
+    // =========================================================
+    // COUNTER FOR STATS
+    // =========================================================
+    public int countActive() {
+        String sql = "SELECT COUNT(*) FROM lost_items WHERE record_status = 'Active'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countUnresolved() {
+        String sql = "SELECT COUNT(*) FROM lost_items WHERE record_status = 'Active' AND item_status = 'Unresolved'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
     // =========================================================
     // CREATE
     // =========================================================
@@ -190,9 +227,9 @@ public class LostItemDAO {
                 INSERT INTO lost_items (
                     item_name, category, description, color, date_lost,
                     owner_name, owner_contact_num, owner_contact_email,
-                    image_path, item_status, record_status, archived_reason
+                    image_path, item_status, record_status
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Unresolved', 'Active', NULL)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Unresolved', 'Active')
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -207,10 +244,11 @@ public class LostItemDAO {
             stmt.setString(7, item.getOwnerContactNum());
             stmt.setString(8, item.getOwnerContactEmail());
             stmt.setString(9, item.getImagePath());
-            stmt.setString(10, item.getArchivedReason());
 
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -254,11 +292,12 @@ public class LostItemDAO {
 
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        return false;
+         return false;
     }
 
     // =========================================================
@@ -281,11 +320,14 @@ public class LostItemDAO {
             stmt.setString(1, reason);
             stmt.setInt(2, id);
             return stmt.executeUpdate() > 0;
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
+        }
             return false;
         }
-    }
+
 
     public boolean delete(int id) {
         return updateRecordStatus(id, "Deleted");
@@ -302,10 +344,79 @@ public class LostItemDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
+        }
             return false;
         }
+
+    //========================================
+    // FILTERS FOR ARCHIVED
+    //========================================
+    public List<LostItem> filterArchived(String keyword, String category,
+                                         String status, String sortBy) {
+        List<LostItem> items = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT * FROM lost_items
+            WHERE record_status = 'Archived'
+            """);
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append("""
+                AND (
+                    LOWER(item_name)      LIKE ?
+                    OR LOWER(description) LIKE ?
+                    OR LOWER(color)       LIKE ?
+                    OR CAST(id AS TEXT)   LIKE ?
+                )
+                """);
+        }
+        if (category != null && !category.isBlank()) {
+            sql.append("AND category = ? \n");
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append("AND item_status = ? \n");
+        }
+        sql.append(switch (sortBy == null ? "newest" : sortBy) {
+            case "oldest"    -> "ORDER BY created_at ASC\n";
+            case "name_asc"  -> "ORDER BY LOWER(item_name) ASC\n";
+            case "name_desc" -> "ORDER BY LOWER(item_name) DESC\n";
+            default          -> "ORDER BY created_at DESC\n";
+        });
+        sql.append("LIMIT 300");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (keyword != null && !keyword.isBlank()) {
+                String like = "%" + keyword.toLowerCase() + "%";
+                stmt.setString(idx++, like);
+                stmt.setString(idx++, like);
+                stmt.setString(idx++, like);
+                stmt.setString(idx++, like);
+            }
+            if (category != null && !category.isBlank()) {
+                stmt.setString(idx++, category);
+            }
+            if (status != null && !status.isBlank()) {
+                stmt.setString(idx++, status);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) items.add(map(rs));
+            }
+
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return items;
     }
 
     // =========================================================
@@ -321,10 +432,11 @@ public class LostItemDAO {
             stmt.setInt(2, id);
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return false;
     }
 
@@ -338,6 +450,8 @@ public class LostItemDAO {
             stmt.setInt(2, id);
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -346,7 +460,7 @@ public class LostItemDAO {
     }
 
     // ========================================================
-    // Archive
+    // Auto Archive
     // =======================================================
     public void autoArchiveExpired(int days, String reason) {
         String sql = "UPDATE lost_items " +
@@ -362,6 +476,8 @@ public class LostItemDAO {
             stmt.setString(1, reason);
             stmt.setInt(2, days);
             stmt.executeUpdate();
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -378,6 +494,8 @@ public class LostItemDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, days);
             stmt.executeUpdate();
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }

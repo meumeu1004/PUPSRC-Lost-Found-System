@@ -46,21 +46,40 @@
                             <children>
                                 <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Item Information" textFill="#710912" />
 
-                                <Label text="Item Name" textFill="#5b5b5b">
-                                    <font><Font name="System Bold" size="13.0" /></font>
-                                </Label>
+                                <!-- Item Name with red asterisk only -->
+                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                    <Label text="Item Name " textFill="#5b5b5b">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                    <Label text="*" textFill="#710912">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                </HBox>
                                 <TextField fx:id="itemNameField" promptText="Item name" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
-                                <Label text="Category" textFill="#5b5b5b">
-                                    <font><Font name="System Bold" size="13.0" /></font>
-                                </Label>
+                                <!-- Category with red asterisk only -->
+                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                    <Label text="Category " textFill="#5b5b5b">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                    <Label text="*" textFill="#710912">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                </HBox>
                                 <ComboBox fx:id="categoryPicker" promptText="Select Category" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
-                                <Label text="Color" textFill="#5b5b5b">
-                                    <font><Font name="System Bold" size="13.0" /></font>
-                                </Label>
+                                <!-- Color with red asterisk only -->
+                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                    <Label text="Color " textFill="#5b5b5b">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                    <Label text="*" textFill="#710912">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                </HBox>
                                 <TextField fx:id="colorField" promptText="Color" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
+                                <!-- Item Type (no asterisk) -->
                                 <Label text="Item Type" textFill="#5b5b5b">
                                     <font><Font name="System Bold" size="13.0" /></font>
                                 </Label>
@@ -75,28 +94,42 @@
                             <children>
                                 <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Report Information" textFill="#710912" />
 
-                                <Label text="Reported By" textFill="#5b5b5b">
-                                    <font><Font name="System Bold" size="13.0" /></font>
-                                </Label>
+                                <!-- Reported By with red asterisk only -->
+                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                    <Label text="Reported By " textFill="#5b5b5b">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                    <Label text="*" textFill="#710912">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                </HBox>
                                 <TextField fx:id="reporterNameField" prefHeight="27.0" prefWidth="375.0"
                                            promptText="Lastname, Firstname M.I."
                                            style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
+                                <!-- Contact Number (no asterisk) -->
                                 <Label text="Contact Number" textFill="#5b5b5b">
                                     <font><Font name="System Bold" size="13.0" /></font>
                                 </Label>
                                 <TextField fx:id="contactNumberField" promptText="Contact Number"
                                            style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
+                                <!-- Email (no asterisk) -->
                                 <Label text="Email" textFill="#5b5b5b">
                                     <font><Font name="System Bold" size="13.0" /></font>
                                 </Label>
                                 <TextField fx:id="emailField" promptText="Email"
                                            style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
-                                <Label fx:id="itemDateLabel" text="Date Lost" textFill="#5b5b5b">
-                                    <font><Font name="System Bold" size="13.0" /></font>
-                                </Label>
+                                <!-- Date Lost / Date Found with red asterisk only -->
+                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                    <Label fx:id="itemDateLabel" text="Date Lost " textFill="#5b5b5b">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                    <Label text=" *" textFill="#710912">
+                                        <font><Font name="System Bold" size="13.0" /></font>
+                                    </Label>
+                                </HBox>
                                 <DatePicker fx:id="itemDatePicker" promptText="Select Date"
                                             style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
                             </children>
@@ -104,7 +137,7 @@
 
                         <!-- Description - Full Width -->
                         <TextArea fx:id="descArea" prefHeight="85.0"
-                                  promptText="Add details (Last location, distinguishing features)..."
+                                  promptText="Description * (minimum 10 characters) - Add details (Last location, distinguishing features)..."
                                   style="-fx-control-inner-background: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"
                                   wrapText="true"
                                   GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
@@ -127,6 +160,11 @@
                             </padding>
                         </VBox>
                     </children>
+
+                    <!-- Note: Either Contact Number or Email is required -->
+                    <Label text="* Either Contact Number or Email is required" textFill="#710912"
+                           style="-fx-font-style: italic; -fx-font-size: 11px;"
+                           GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3" />
 
                     <rowConstraints>
                         <RowConstraints />

@@ -2,6 +2,7 @@ package dao;
 
 import database.DBConnection;
 import model.FoundItem;
+import model.LostItem;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -47,13 +48,13 @@ public class FoundItemDAO {
         }
 
         sql.append(switch (sortBy == null ? "newest" : sortBy) {
-            case "oldest"    -> "ORDER BY created_at ASC\n";
-            case "name_asc"  -> "ORDER BY LOWER(item_name) ASC\n";
+            case "oldest" -> "ORDER BY created_at ASC\n";
+            case "name_asc" -> "ORDER BY LOWER(item_name) ASC\n";
             case "name_desc" -> "ORDER BY LOWER(item_name) DESC\n";
-            default          -> "ORDER BY created_at DESC\n";
+            default -> "ORDER BY created_at DESC\n";
         });
 
-        sql.append("LIMIT 200");
+        sql.append("LIMIT 300");
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
@@ -80,6 +81,8 @@ public class FoundItemDAO {
                 while (rs.next()) items.add(map(rs));
             }
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -106,6 +109,8 @@ public class FoundItemDAO {
 
             while (rs.next()) items.add(map(rs));
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -132,11 +137,45 @@ public class FoundItemDAO {
 
             while (rs.next()) items.add(map(rs));
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         return items;
+    }
+
+    // =========================================================
+    // COUNTER FOR STATS
+    // =========================================================
+
+    public int countActive() {
+        String sql = "SELECT COUNT(*) FROM found_items WHERE record_status = 'Active'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countUnclaimed() {
+        String sql = "SELECT COUNT(*) FROM found_items WHERE record_status = 'Active' AND item_status = 'Unclaimed'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     // =========================================================
@@ -168,6 +207,8 @@ public class FoundItemDAO {
 
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -211,6 +252,8 @@ public class FoundItemDAO {
 
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -227,7 +270,8 @@ public class FoundItemDAO {
 
     public boolean archive(int id, String reason) {
         String sql = """
-            UPDATE found_items
+            
+                UPDATE found_items
             SET record_status   = 'Archived',
                 archived_reason = ?,
                 archived_at     = NOW()
@@ -238,11 +282,14 @@ public class FoundItemDAO {
             stmt.setString(1, reason);
             stmt.setInt(2, id);
             return stmt.executeUpdate() > 0;
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
-    }
+            return
+    false;
+        }
 
     public boolean delete(int id) {
         return updateRecordStatus(id, "Deleted");
@@ -259,10 +306,79 @@ public class FoundItemDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             return stmt.executeUpdate() > 0;
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
+        }
             return false;
         }
+
+    //========================================
+    // FILTERS FOR ARCHIVED
+    //========================================
+    public List<FoundItem> filterArchived(String keyword, String category,
+                                         String status, String sortBy) {
+        List<FoundItem> items = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT * FROM found_items
+            WHERE record_status = 'Archived'
+            """);
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append("""
+                AND (
+                    LOWER(item_name)      LIKE ?
+                    OR LOWER(description) LIKE ?
+                    OR LOWER(color)       LIKE ?
+                    OR CAST(id AS TEXT)   LIKE ?
+                )
+                """);
+        }
+        if (category != null && !category.isBlank()) {
+            sql.append("AND category = ? \n");
+        }
+        if (status != null && !status.isBlank()) {
+            sql.append("AND item_status = ? \n");
+        }
+        sql.append(switch (sortBy == null ? "newest" : sortBy) {
+            case "oldest"    -> "ORDER BY created_at ASC\n";
+            case "name_asc"  -> "ORDER BY LOWER(item_name) ASC\n";
+            case "name_desc" -> "ORDER BY LOWER(item_name) DESC\n";
+            default          -> "ORDER BY created_at DESC\n";
+        });
+        sql.append("LIMIT 300");
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (keyword != null && !keyword.isBlank()) {
+                String like = "%" + keyword.toLowerCase() + "%";
+                stmt.setString(idx++, like);
+                stmt.setString(idx++, like);
+                stmt.setString(idx++, like);
+                stmt.setString(idx++, like);
+            }
+            if (category != null && !category.isBlank()) {
+                stmt.setString(idx++, category);
+            }
+            if (status != null && !status.isBlank()) {
+                stmt.setString(idx++, status);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) items.add(map(rs));
+            }
+
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return items;
     }
 
     // =========================================================
@@ -278,6 +394,8 @@ public class FoundItemDAO {
             stmt.setInt(2, id);
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -295,6 +413,8 @@ public class FoundItemDAO {
             stmt.setInt(2, id);
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -303,7 +423,7 @@ public class FoundItemDAO {
     }
 
     // ========================================================
-    // Archive
+    // Auto Archive
     // =======================================================
 
     public void autoArchiveExpired(int days, String reason) {
@@ -320,6 +440,8 @@ public class FoundItemDAO {
             stmt.setString(1, reason);
             stmt.setInt(2, days);
             stmt.executeUpdate();
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -338,6 +460,8 @@ public class FoundItemDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, days);
             stmt.executeUpdate();
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -366,4 +490,5 @@ public class FoundItemDAO {
                 rs.getObject("date_found", LocalDate.class)
         );
     }
-}
+
+    }
