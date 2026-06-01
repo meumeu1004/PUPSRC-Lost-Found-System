@@ -7,8 +7,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import model.enums.ArchiveReason;
 
 public class AdminApplication extends Application {
+
+    private final LostItemDAO  lostDAO  = new LostItemDAO();
+    private final FoundItemDAO foundDAO = new FoundItemDAO();
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -29,14 +33,10 @@ public class AdminApplication extends Application {
     private void startAutoArchiveScheduler() {
         java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
                 .scheduleAtFixedRate(() -> {
-                    LostItemDAO  lostDAO  = new LostItemDAO();
-                    FoundItemDAO foundDAO = new FoundItemDAO();
-
-                    String archiveReason = "Auto Archived (60 Days Unclaimed/Unresolved)";
 
                     // Archive active items older than 60 days
-                    lostDAO.autoArchiveExpired(60, archiveReason);
-                    foundDAO.autoArchiveExpired(60, archiveReason);
+                    lostDAO.autoArchiveExpired(60, ArchiveReason.AUTO_LOST_UNRESOLVED.getLabel());
+                    foundDAO.autoArchiveExpired(60, ArchiveReason.AUTO_FOUND_UNCLAIMED.getLabel());
 
                     // Soft delete archived items older than 60 days
                     lostDAO.autoDeleteExpired(60);
