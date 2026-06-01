@@ -225,6 +225,7 @@ public class PostItemViewController {
             e.printStackTrace(); // FXML failed to load
         }
     }
+  
     // =========================================================
     // RESTORE
     // =========================================================
@@ -259,6 +260,28 @@ public class PostItemViewController {
             PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
             e.printStackTrace();
         }
+    }
+
+    // =========================================================
+    // RESTORE
+    // =========================================================
+    @FXML
+    private void handleRestore() {
+        if (existingLost != null) {
+            lostDAO.restore(existingLost.getId());
+            auditDAO.insertLog(existingLost.getId(), "Lost",
+                    "Restored", "admin",
+                    "{\"record_status\": \"Archived\"}",
+                    "{\"record_status\": \"Active\"}");
+        } else if (existingFound != null) {
+            foundDAO.restore(existingFound.getId());
+            auditDAO.insertLog(existingFound.getId(), "Found",
+                    "Restored", "admin",
+                    "{\"record_status\": \"Archived\"}",
+                    "{\"record_status\": \"Active\"}");
+        }
+        if (adminController != null) adminController.refreshDashboard();
+        handleClose();
     }
 
     // =========================================================

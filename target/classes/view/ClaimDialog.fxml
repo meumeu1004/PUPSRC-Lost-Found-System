@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox fx:id="claimDialogRoot" prefHeight="622.0" prefWidth="688.0" spacing="15.0" style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 10; -fx-border-radius: 10;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ClaimController">
+    <padding>
+        <Insets bottom="25.0" left="25.0" right="25.0" top="20.0" />
+    </padding>
+
+    <children>
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT">
+            <children>
+                <Label style="-fx-font-weight: bold;" text="CLAIM ITEM" textFill="#710912">
+                    <font><Font size="22.0" /></font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-cursor: hand;" text="✕" textFill="#710912">
+                    <font><Font name="System Bold" size="18.0" /></font>
+                </Button>
+            </children>
+        </HBox>
+
+        <Separator />
+      <ScrollPane prefHeight="596.0" prefWidth="523.0" style="-fx-background-color: white;">
+         <content>
+            <VBox prefHeight="602.0" prefWidth="615.0">
+               <children>
+            
+                    <!-- Admin Password Section -->
+                    <VBox prefHeight="390.0" prefWidth="502.0" spacing="10.0" style="-fx-background-color: white;">
+                        <children>
+                  
+                                      <!-- Claimant Information Section -->
+                          <VBox prefHeight="323.0" prefWidth="501.0" spacing="10.0" style="-fx-background-color: white;">
+                              <children>
+                        
+                                      <!-- Item Information Section -->
+                                <VBox prefHeight="139.0" prefWidth="99.0" spacing="10.0" style="-fx-background-color: #FFF9F9; -fx-border-color: #710912; -fx-border-radius: 5; -fx-background-radius: 5;">
+                                    <padding>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </padding>
+                                    <children>
+                                        <Label style="-fx-font-weight: bold; -fx-text-fill: #710912; -fx-font-size: 14px;" text="ITEM BEING CLAIMED" />
+                                        <HBox spacing="10.0">
+                                            <Label style="-fx-font-weight: bold;" text="Item Name:" />
+                                            <Label fx:id="itemNameLabel" text="-" textFill="#5b5b5b" />
+                                        </HBox>
+                                        <HBox spacing="10.0">
+                                            <Label style="-fx-font-weight: bold;" text="Category:" />
+                                            <Label fx:id="itemCategoryLabel" text="-" textFill="#5b5b5b" />
+                                        </HBox>
+                                        <HBox spacing="10.0">
+                                            <Label style="-fx-font-weight: bold;" text="Color:" />
+                                            <Label fx:id="itemColorLabel" text="-" textFill="#5b5b5b" />
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                                  <Label style="-fx-font-weight: bold; -fx-text-fill: #710912; -fx-font-size: 14px;" text="CLAIMANT INFORMATION" />
+                  
+                                              <GridPane hgap="15.0" style="-fx-background-color: white;" vgap="12.0">
+                                      <columnConstraints>
+                                          <ColumnConstraints percentWidth="30.0" />
+                                          <ColumnConstraints percentWidth="70.0" />
+                                      </columnConstraints>
+                  
+                                                  <children>
+                                          <Label text="Full Name:" textFill="#5b5b5b" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                              <font>
+                                          <Font name="System Bold" size="13.0" />
+                                       </font>
+                                          </Label>
+                                          <TextField fx:id="claimantNameField" promptText="Last name, First name M.I." GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                  
+                                                      <Label text="ID Number:" textFill="#5b5b5b" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                              <font>
+                                          <Font name="System Bold" size="13.0" />
+                                       </font>
+                                          </Label>
+                                          <TextField fx:id="claimantIdField" promptText="2024-00111-SR-0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  
+                                                      <Label text="Contact Number:" textFill="#5b5b5b" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                                              <font>
+                                          <Font name="System Bold" size="13.0" />
+                                       </font>
+                                          </Label>
+                                          <TextField fx:id="claimantContactField" promptText="Contact Number" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  
+                                                      <Label text="Email:" textFill="#5b5b5b" GridPane.columnIndex="0" GridPane.rowIndex="3">
+                                              <font>
+                                          <Font name="System Bold" size="13.0" />
+                                       </font>
+                                          </Label>
+                                          <TextField fx:id="claimantEmailField" promptText="Email Address" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                          <Label text="Remarks:" textFill="#5b5b5b" GridPane.columnIndex="0" GridPane.rowIndex="4">
+                                              <font>
+                                                  <Font name="System Bold" size="13.0" />
+                                              </font>
+                                          </Label>
+                                          <TextField fx:id="remarksField" promptText="Optional remarks" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                      </children>
+                                 <rowConstraints>
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                     <RowConstraints />
+                                 </rowConstraints>
+                                  </GridPane>
+                              </children>
+                          </VBox>
+                            <Label style="-fx-font-weight: bold; -fx-text-fill: #710912; -fx-font-size: 14px; -fx-background-color: white;" text="ADMIN AUTHORIZATION" />
+            
+                            <GridPane hgap="15.0" vgap="12.0">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="30.0" />
+                                    <ColumnConstraints percentWidth="70.0" />
+                                </columnConstraints>
+            
+                                <children>
+                                    <Label text="Password:" textFill="#5b5b5b" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                        <font>
+                                    <Font name="System Bold" size="13.0" />
+                                 </font>
+                                    </Label>
+                                    <PasswordField fx:id="adminPasswordField" promptText="Enter admin password" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                </children>
+                           <rowConstraints>
+                              <RowConstraints />
+                           </rowConstraints>
+                            </GridPane>
+                        </children>
+                    </VBox>
+            
+                    <!-- Proof of Ownership Section -->
+                    <VBox prefHeight="158.0" prefWidth="498.0" spacing="10.0" style="-fx-background-color: white;">
+                        <children>
+                            <Label style="-fx-font-weight: bold; -fx-text-fill: #710912; -fx-font-size: 14px;" text="PROOF OF OWNERSHIP" />
+            
+                            <VBox alignment="CENTER" onMouseClicked="#handleUploadProof" prefHeight="161.0" prefWidth="505.0" spacing="10.0" style="-fx-border-color: #710912; -fx-border-style: dashed; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-color: white; -fx-cursor: hand;">
+                                <padding>
+                              <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                           </padding>
+                                <children>
+                                    <Label fx:id="proofPlaceholder" alignment="CENTER" text="📷 Click to upload\nProof of Ownership" textAlignment="CENTER" textFill="#710912">
+                                        <font>
+                                    <Font name="System Italic" size="12.0" />
+                                 </font>
+                                    </Label>
+                                    <ImageView fx:id="proofPreview" fitHeight="111.0" fitWidth="462.0" preserveRatio="true" visible="false" />
+                                    <Button fx:id="removeProofButton" managed="false" onAction="#handleRemoveProof" style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-size: 11px; -fx-background-radius: 5; -fx-cursor: hand;" text="REMOVE IMAGE" visible="false" />
+                                </children>
+                            </VBox>
+                        </children>
+                    </VBox>
+               </children>
+            </VBox>
+         </content>
+      </ScrollPane>
+
+        <Separator />
+
+        <!-- Buttons -->
+        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+            <children>
+                <Button onAction="#handleClose" style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8 20 8 20;" text="CANCEL" />
+                <Button fx:id="confirmButton" onAction="#handleConfirmClaim" style="-fx-background-color: #c28d39; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8 20 8 20;" text="CONFIRM CLAIM" />
+            </children>
+        </HBox>
+    </children>
+</VBox>
