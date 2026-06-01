@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefWidth="220.0"
+      style="-fx-background-color: #A9A9A9; -fx-background-radius: 12;"
+      styleClass="item-card"
+      stylesheets="@../styles/style.css"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.ArchiveItemCardController">
+
+    <children>
+
+        <!-- Image / Icon area — same as AdminItemCard -->
+        <StackPane fx:id="imageContainer" VBox.vgrow="ALWAYS" prefHeight="140.0">
+            <children>
+                <Label fx:id="iconLabel" text="?" textFill="WHITE" StackPane.alignment="CENTER">
+                    <font><Font size="80.0" /></font>
+                </Label>
+                <ImageView fx:id="itemImage" fitHeight="140.0" fitWidth="200.0"
+                           pickOnBounds="true" preserveRatio="true"
+                           visible="false" StackPane.alignment="CENTER" />
+
+                <!-- Type badge top-right -->
+                <Label fx:id="typeLabel" text="Lost"
+                       style="-fx-background-color: rgba(0,0,0,0.45);
+                              -fx-background-radius: 6;
+                              -fx-text-fill: white;
+                              -fx-font-size: 10px;
+                              -fx-padding: 2 6 2 6;"
+                       StackPane.alignment="TOP_RIGHT">
+                    <StackPane.margin><Insets top="8.0" right="8.0" /></StackPane.margin>
+                </Label>
+            </children>
+        </StackPane>
+
+        <!-- Red info section — item name, date, status (same as AdminItemCard) -->
+        <VBox spacing="3.0"
+              style="-fx-background-color: #710912; -fx-background-radius: 0 0 0 0;">
+            <padding><Insets bottom="8.0" left="15.0" right="15.0" top="10.0" /></padding>
+            <children>
+                <Label fx:id="itemName" text="ITEM NAME"
+                       style="-fx-font-weight: bold;"
+                       textFill="WHITE" wrapText="true" maxWidth="190.0" />
+                <Label fx:id="itemDate" text="Date" textFill="#eeeeee">
+                    <font><Font size="11.0" /></font>
+                </Label>
+                <Label fx:id="statusLabel" text="Status"
+                       style="-fx-font-size: 10px;" textFill="#ffcccc" />
+            </children>
+        </VBox>
+
+        <!-- Archive info — same red bg, rounded bottom corners -->
+        <VBox spacing="4.0"
+              style="-fx-background-color: #710912; -fx-background-radius: 0 0 12 12;">
+            <padding><Insets bottom="12.0" left="15.0" right="15.0" top="6.0" /></padding>
+            <children>
+                <!-- Thin separator line -->
+                <VBox style="-fx-background-color: rgba(255,255,255,0.25);
+                             -fx-pref-height: 1; -fx-min-height: 1; -fx-max-height: 1;" />
+
+                <HBox spacing="4.0">
+                    <children>
+                        <Label text="Reason:"
+                               style="-fx-font-size: 10px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #ffcccc;" />
+                        <Label fx:id="archiveReasonLabel" text="—"
+                               style="-fx-font-size: 10px; -fx-text-fill: white;"
+                               wrapText="true" maxWidth="148.0" />
+                    </children>
+                </HBox>
+                <HBox spacing="4.0">
+                    <children>
+                        <Label text="Archived:"
+                               style="-fx-font-size: 10px;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #ffcccc;" />
+                        <Label fx:id="archivedAtLabel" text="—"
+                               style="-fx-font-size: 10px; -fx-text-fill: white;" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+    </children>
+</VBox>

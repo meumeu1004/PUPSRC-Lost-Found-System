@@ -11,6 +11,8 @@ import javafx.stage.Stage;
 import model.FoundItem;
 import model.LostItem;
 import util.DateUtil;
+import database.DBConnection;
+import controller.PasswordManager;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -143,29 +145,53 @@ public class RecyclebinController {
         confirm.showAndWait().ifPresent(response -> {
             if (response != ButtonType.OK) return;
 
-            boolean ok;
-            if ("Lost".equals(row.getType())) {
-                ok = lostDAO.restore(row.getId());
-                if (ok) auditDAO.insertLog(row.getId(), "Lost",
-                        "Restored", "admin",
-                        "{\"record_status\": \"Deleted\"}",
-                        "{\"record_status\": \"Active\"}");
-            } else {
-                ok = foundDAO.restore(row.getId());
-                if (ok) auditDAO.insertLog(row.getId(), "Found",
-                        "Restored", "admin",
-                        "{\"record_status\": \"Deleted\"}",
-                        "{\"record_status\": \"Active\"}");
-            }
+            try {
 
-            if (ok) {
-                rows.remove(row);
-                countLabel.setText(rows.size() + " deleted item"
-                        + (rows.size() == 1 ? "" : "s"));
-                showAlert("Success", "\"" + row.getItemName()
-                        + "\" has been restored to Active.");
-            } else {
-                showAlert("Error", "Restore failed. Please try again.");
+                boolean ok;
+
+                if ("Lost".equals(row.getType())) {
+                    ok = lostDAO.restore(row.getId());
+
+                    if (ok) auditDAO.insertLog(row.getId(), "Lost",
+                            "Restored", "admin",
+                            "{\"record_status\": \"Deleted\"}",
+                            "{\"record_status\": \"Active\"}");
+
+                } else {
+                    ok = foundDAO.restore(row.getId());
+
+                    if (ok) auditDAO.insertLog(row.getId(), "Found",
+                            "Restored", "admin",
+                            "{\"record_status\": \"Deleted\"}",
+                            "{\"record_status\": \"Active\"}");
+                }
+
+                if (ok) {
+                    rows.remove(row);
+                    countLabel.setText(rows.size() + " deleted item"
+                            + (rows.size() == 1 ? "" : "s"));
+
+                    showAlert("Success",
+                            "\"" + row.getItemName() + "\" has been restored to Active.");
+                } else {
+                    showAlert("Error", "Restore failed. Please try again.");
+                }
+
+            } catch (DBConnection.NoConnectionException e) {
+
+                PasswordManager.showAlert(
+                        "No Internet",
+                        "Please connect to the Internet and try again."
+                );
+
+            } catch (Exception e) {
+
+                PasswordManager.showAlert(
+                        "Error",
+                        "Something went wrong. Please try again."
+                );
+
+                e.printStackTrace();
             }
         });
     }
