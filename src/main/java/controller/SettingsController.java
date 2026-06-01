@@ -5,6 +5,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import model.Admin;
+import database.DBConnection;
+import controller.PasswordManager;
 
 public class SettingsController {
 
@@ -48,6 +50,7 @@ public class SettingsController {
         }
 
         // ── 2. Fetch admin and verify current password ───────
+    try{
         Admin admin = adminDAO.getByUsername("admin");
 
         if (admin == null) {
@@ -79,6 +82,19 @@ public class SettingsController {
         } else {
             showAlert("Error", "Failed to update password. Please try again.");
         }
+
+    } catch (DBConnection.NoConnectionException e) {
+
+        showAlert("No Internet",
+                "Please connect to the Internet and try again.");
+
+    } catch (Exception e) {
+
+        showAlert("Error",
+                "Something went wrong. Please try again.");
+
+        e.printStackTrace();
+    }
     }
 
     @FXML
