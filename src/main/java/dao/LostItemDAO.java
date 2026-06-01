@@ -304,8 +304,30 @@ public class LostItemDAO {
     // STATUS UPDATES
     // =========================================================
     public boolean markFound(int id) {
-        return updateItemStatus(id, "Found");
-    }
+
+            String sql = """
+                UPDATE lost_items
+                SET item_status = 'Found',
+                    record_status = 'Archived',
+                    archived_reason = 'Marked as Found',
+                    archived_at = NOW()
+                WHERE id = ?
+                """;
+        
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+        
+                stmt.setInt(1, id);
+                return stmt.executeUpdate() > 0;
+        
+            } catch (DBConnection.NoConnectionException e) {
+                throw e;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        
+            return false;
+        }
 
     public boolean archive(int id, String reason) {
         String sql = """
