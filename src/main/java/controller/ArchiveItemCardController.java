@@ -40,7 +40,7 @@ public class ArchiveItemCardController {
         archivedAtLabel.setText(
                 item.getArchivedAt() != null ? DateUtil.format(item.getArchivedAt()) : "—");
 
-        loadImage(item.getImagePath(), "L");
+        loadImage(item.getImagePath(), "Lost", item.getCategory());
     }
 
     // =========================================================
@@ -58,13 +58,13 @@ public class ArchiveItemCardController {
         archivedAtLabel.setText(
                 item.getArchivedAt() != null ? DateUtil.format(item.getArchivedAt()) : "—");
 
-        loadImage(item.getImagePath(), "F");
+        loadImage(item.getImagePath(), "Found", item.getCategory());
     }
 
     // =========================================================
-    // HELPER
+    // HELPER - Load image or show emoji
     // =========================================================
-    private void loadImage(String imagePath, String fallbackIcon) {
+    private void loadImage(String imagePath, String type, String category) {
         if (imagePath != null && !imagePath.isBlank()) {
             try {
                 File file = new File(imagePath);
@@ -76,8 +76,31 @@ public class ArchiveItemCardController {
                 }
             } catch (Exception ignored) {}
         }
-        iconLabel.setText(fallbackIcon);
+
+        // No image - show emoji
+        String emoji = getEmoji(type, category);
+        iconLabel.setText(emoji);
         iconLabel.setVisible(true);
         itemImage.setVisible(false);
+    }
+
+    private String getEmoji(String type, String category) {
+        // Always show category emoji
+        return getCategoryEmoji(category);
+    }
+
+    private String getCategoryEmoji(String category) {
+        if (category == null) return "❓";
+        return switch (category) {
+            case "Electronics" -> "📱";
+            case "Clothing" -> "👕";
+            case "Accessories" -> "💍";
+            case "Books" -> "📚";
+            case "ID/Documents" -> "🪪";
+            case "Keys" -> "🔑";
+            case "Bag" -> "🎒";
+            case "Others" -> "📦";
+            default -> "❓";
+        };
     }
 }
