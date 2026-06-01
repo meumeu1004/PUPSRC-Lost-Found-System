@@ -262,27 +262,6 @@ public class PostItemViewController {
         }
     }
 
-    // =========================================================
-    // RESTORE
-    // =========================================================
-    @FXML
-    private void handleRestore() {
-        if (existingLost != null) {
-            lostDAO.restore(existingLost.getId());
-            auditDAO.insertLog(existingLost.getId(), "Lost",
-                    "Restored", "admin",
-                    "{\"record_status\": \"Archived\"}",
-                    "{\"record_status\": \"Active\"}");
-        } else if (existingFound != null) {
-            foundDAO.restore(existingFound.getId());
-            auditDAO.insertLog(existingFound.getId(), "Found",
-                    "Restored", "admin",
-                    "{\"record_status\": \"Archived\"}",
-                    "{\"record_status\": \"Active\"}");
-        }
-        if (adminController != null) adminController.refreshDashboard();
-        handleClose();
-    }
 
     // =========================================================
     // DELETE (soft delete → Deleted)
