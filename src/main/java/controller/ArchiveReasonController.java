@@ -20,8 +20,7 @@ public class ArchiveReasonController {
                 "Manually Archived by Admin",
                 "Duplicate Record",
                 "Invalid / Incorrect Entry",
-                "Claimed by Owner",
-                "Returned to Owner"
+                "Claimed by Owner"
         );
         reasonCombo.setValue("Manually Archived by Admin");
     }

@@ -19,7 +19,11 @@ public class ClaimDAO {
             VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, NOW(), NOW())
             """;
         String sqlUpdate = """
-            UPDATE found_items SET item_status = 'Claimed'
+            UPDATE found_items 
+            SET item_status = 'Claimed',
+                record_status = 'Archived',
+                archived_reason = 'Claimed by Owner',
+                archived_at = NOW()
             WHERE id = ? AND record_status != 'Deleted'
             """;
 
@@ -50,6 +54,9 @@ public class ClaimDAO {
             } finally {
                 conn.setAutoCommit(true);
             }
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -89,6 +96,8 @@ public class ClaimDAO {
 
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -116,6 +125,8 @@ public class ClaimDAO {
                 list.add(map(rs));
             }
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -147,6 +158,8 @@ public class ClaimDAO {
                 }
             }
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -170,6 +183,8 @@ public class ClaimDAO {
                 if (rs.next()) return map(rs);
             }
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -195,6 +210,8 @@ public class ClaimDAO {
             stmt.setInt(2, claimId);
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -220,6 +237,8 @@ public class ClaimDAO {
             stmt.setInt(2, claimId);
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -240,6 +259,8 @@ public class ClaimDAO {
             stmt.setInt(1, claimId);
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
