@@ -179,12 +179,12 @@ public class AdminController {
 
                 case "Resolved Lost" ->
                         allItems.addAll(lostDAO.filterArchived(keyword, cat, "Found", sort));
+                
+                case "Unresolved Lost" ->
+                        allItems.addAll(lostDAO.filterArchived(keyword, cat, "Unresolved", sort));
 
                 case "Claimed Found" ->
                         allItems.addAll(foundDAO.filterArchived(keyword, cat, "Claimed", sort));
-
-                case "Unresolved Lost" ->
-                        allItems.addAll(lostDAO.filterArchived(keyword, cat, "Unresolved", sort));
 
                 case "Unclaimed Found" ->
                         allItems.addAll(foundDAO.filterArchived(keyword, cat, "Unclaimed", sort));
