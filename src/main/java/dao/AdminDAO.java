@@ -28,8 +28,10 @@ public class AdminDAO {
                 }
             }
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;             // bubble up to controller
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // real DB error — log and fall through to null
         }
 
         return null;
@@ -37,17 +39,6 @@ public class AdminDAO {
 
     // =========================================================
     // FIX 8 — LOGIN via bcrypt (no longer compares hash in SQL)
-    //
-    // OLD (broken): WHERE username = ? AND password_hash = ?
-    //   → plain string comparison against a bcrypt hash always fails
-    //
-    // NEW: fetch admin by username only, then verify in Java with
-    //   BCrypt.verifyer().verify(typedPassword, storedHash).verified
-    //
-    // USAGE in controller:
-    //   Admin admin = adminDAO.getByUsername(username);
-    //   boolean ok  = adminDAO.verifyPassword(typedPassword, admin);
-    //   if (ok) { adminDAO.updateLastLogin(admin.getAdminId()); }
     // =========================================================
     public boolean verifyPassword(String typedPassword, Admin admin) {
 
@@ -83,8 +74,10 @@ public class AdminDAO {
 
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;             // bubble up to controller
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // real DB error — log and fall through to null
         }
 
         return false;
@@ -107,8 +100,10 @@ public class AdminDAO {
             stmt.setInt(1, adminId);
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;             // bubble up to controller
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // real DB error — log and fall through to null
         }
 
         return false;

@@ -44,6 +44,8 @@ public class AuditLogDAO {
 
             return stmt.executeUpdate() > 0;
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -72,6 +74,8 @@ public class AuditLogDAO {
                 logs.add(formatLog(rs));
             }
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -104,6 +108,8 @@ public class AuditLogDAO {
                 }
             }
 
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
         } catch (SQLException e) {
             e.printStackTrace();
         }
