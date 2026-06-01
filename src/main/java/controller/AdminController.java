@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.geometry.Insets;
 import model.FoundItem;
 import model.LostItem;
 import util.PasswordGuard;
@@ -101,6 +102,9 @@ public class AdminController {
 
         typeCombo.getItems().addAll("All Types", "Lost", "Found");
         typeCombo.setValue("All Types");
+        typeCombo.getStyleClass().add("compact-dropdown");
+        typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
+        typeCombo.setPadding(new Insets(0));
         typeCombo.setOnAction(e -> applyFilters());
 
         sortCombo.setOnAction(e -> applyFilters());
@@ -259,14 +263,14 @@ public class AdminController {
                         String date = lost.getDateLost() != null
                                 ? lost.getDateLost().format(UI_DATE) : "";
                         cardCtrl.setItem(lost.getItemName(), date,
-                                lost.getImagePath(), lost.getItemStatus(), "Lost");
+                                lost.getImagePath(), lost.getItemStatus(), "Lost", lost.getCategory());
                         card.setOnMouseClicked(e -> openItemDialog(lost));
 
                     } else if (item instanceof FoundItem found) {
                         String date = found.getDateFound() != null
                                 ? found.getDateFound().format(UI_DATE) : "";
                         cardCtrl.setItem(found.getItemName(), date,
-                                found.getImagePath(), found.getItemStatus(), "Found");
+                                found.getImagePath(), found.getItemStatus(), "Found", found.getCategory());
                         card.setOnMouseClicked(e -> openItemDialog(found));
                     }
                 }
@@ -328,7 +332,7 @@ public class AdminController {
     // =========================================================
     // ARCHIVED VIEW — password required to enter
     // =========================================================
-   
+
     @FXML
     private void handleArchive() {
 
@@ -393,7 +397,18 @@ public class AdminController {
             typeCombo.getItems().addAll("All Types", "Lost", "Found");
             typeCombo.setValue("All Types");
 
+            // ADD THIS: Apply compact style for main dashboard
+            typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
+            typeCombo.setPadding(new Insets(0));
+
             loadDashboard();
+
+            // Force refresh of style after loading
+            javafx.application.Platform.runLater(() -> {
+                typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
+                typeCombo.setPadding(new javafx.geometry.Insets(0));
+            });
+
             return; // loadDashboard() calls applyFilters() internally
         }
 
