@@ -22,6 +22,7 @@ import controller.PasswordManager;
 import controller.ArchiveItemCardController;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +36,7 @@ public class AdminController {
     @FXML private Label     totalUnresolvedLabel;
     @FXML private Label     totalLostLabelText;
     @FXML private Label     totalFoundLabelText;
+    @FXML private Label     totalPendingTextLabel;
 
     @FXML private TextField  searchField;
     @FXML private ComboBox<String> sortCombo;
@@ -86,7 +88,31 @@ public class AdminController {
     // =========================================================
     // INITIALIZE
     // =========================================================
-    public void refreshDashboard() {loadDashboard();}
+    public void refreshDashboard() {
+        refreshStats();
+        applyFilters();
+    }
+
+    private void refreshStats() {
+        try {
+            if (showingArchive) {
+                totalLostLabel.setText(String.valueOf(lostDAO.getAllArchived().size()));
+                totalFoundLabel.setText(String.valueOf(foundDAO.getAllArchived().size()));
+                totalUnresolvedLabel.setText(String.valueOf(
+                        lostDAO.getAllArchived().size() + foundDAO.getAllArchived().size()));
+            } else {
+                totalLostLabel.setText(String.valueOf(lostDAO.countActive()));
+                totalFoundLabel.setText(String.valueOf(foundDAO.countActive()));
+                totalUnresolvedLabel.setText(String.valueOf(
+                        lostDAO.countActive() + foundDAO.countActive()));
+            }
+        } catch (DBConnection.NoConnectionException e) {
+            PasswordManager.showAlert("No Internet",
+                    "Please connect to the Internet and try again.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @FXML
     public void initialize() {
@@ -126,7 +152,7 @@ public class AdminController {
             totalLostLabel.setText(String.valueOf(lostDAO.countActive()));
             totalFoundLabel.setText(String.valueOf(foundDAO.countActive()));
             totalUnresolvedLabel.setText(String.valueOf(
-                    lostDAO.countUnresolved() + foundDAO.countUnclaimed()));
+                    lostDAO.countActive() + foundDAO.countActive()));
 
             applyFilters();
 
@@ -352,9 +378,21 @@ public class AdminController {
             totalLostLabelText.setText("ARCHIVE LOST RECORDS");
             totalFoundLabelText.setText("ARCHIVE FOUND RECORDS");
 
+            // ADD THIS LINE - change the right card label to "TOTAL ARCHIVE ITEMS"
+            totalPendingTextLabel.setText("TOTAL ARCHIVE ITEMS");
+
+            totalUnresolvedLabel.setText(String.valueOf(
+                    lostDAO.getAllArchived().size() + foundDAO.getAllArchived().size()
+            ));
+
             try {
                 totalLostLabel.setText(String.valueOf(lostDAO.getAllArchived().size()));
                 totalFoundLabel.setText(String.valueOf(foundDAO.getAllArchived().size()));
+
+                // ADD THIS LINE - set total count for archive
+                totalUnresolvedLabel.setText(String.valueOf(
+                        lostDAO.getAllArchived().size() + foundDAO.getAllArchived().size()));
+
             } catch (DBConnection.NoConnectionException e) {
                 // reset and bail out
                 showingArchive = false;
@@ -389,6 +427,9 @@ public class AdminController {
             dashboardTitleLabel.setText("Welcome to the Dashboard!");
             totalLostLabelText.setText("TOTAL LOST ITEMS");
             totalFoundLabelText.setText("TOTAL FOUND ITEMS");
+
+            // ADD THIS LINE - change back to "TOTAL PENDING ITEMS"
+            totalPendingTextLabel.setText("TOTAL PENDING ITEMS");
 
             restoreDashboardButtons();
 
@@ -474,8 +515,12 @@ public class AdminController {
             stage.setHeight(560);
             stage.setResizable(false);
             stage.showAndWait();
-
-            loadDashboard();
+            if (showingArchive) {
+                refreshStats();
+                applyFilters();
+            } else {
+                loadDashboard();
+            }
 
         } catch (DBConnection.NoConnectionException e) {
             PasswordManager.showAlert("No Internet",
