@@ -69,7 +69,7 @@ public class AdminController {
     private final AuditLogDAO  auditDAO = new AuditLogDAO();
 
     // ── Pagination state ──────────────────────────────────────
-    private static final int PAGE_SIZE = 8;
+    private static final int PAGE_SIZE = 10;
     private int currentPage = 0;
 
     // All items currently loaded (after filter/search applied)
