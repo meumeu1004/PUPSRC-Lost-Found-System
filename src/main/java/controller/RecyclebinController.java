@@ -73,7 +73,7 @@ public class RecyclebinController {
 
         // Restore button per row
         colAction.setCellFactory(col -> new TableCell<>() {
-            private final Button btn = new Button("Restore");
+            private final Button btn = new Button("RECOVER");
             {
                 btn.setStyle(
                         "-fx-background-color: #16213E; " +
