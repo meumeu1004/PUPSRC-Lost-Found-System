@@ -65,7 +65,7 @@
                     <VBox alignment="CENTER" prefWidth="150.0" style="-fx-background-radius: 10;" styleClass="overview-archived" stylesheets="@../styles/style.css" HBox.hgrow="ALWAYS">
                         <padding><Insets bottom="20.0" top="20.0" /></padding>
                         <Label fx:id="totalUnresolvedLabel" style="-fx-font-weight: bold; -fx-font-size: 32px;" text="0" />
-                        <Label style="-fx-font-size: 14px;" text="TOTAL PENDING ITEMS" />
+                        <Label fx:id="totalPendingTextLabel" style="-fx-font-size: 14px;" text="TOTAL PENDING ITEMS" />
                     </VBox>
                 </HBox>
 
