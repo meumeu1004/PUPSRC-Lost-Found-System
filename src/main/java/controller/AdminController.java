@@ -11,6 +11,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
@@ -61,7 +62,8 @@ public class AdminController {
     @FXML private Button archiveButton;
     @FXML private Button backToMainButton;
     @FXML private Button recentlyDeletedButton;
- 
+
+    @FXML private ImageView refreshIcon;
 
     // ── DAOs ─────────────────────────────────────────────────
     private final LostItemDAO  lostDAO  = new LostItemDAO();
@@ -69,7 +71,7 @@ public class AdminController {
     private final AuditLogDAO  auditDAO = new AuditLogDAO();
 
     // ── Pagination state ──────────────────────────────────────
-    private static final int PAGE_SIZE = 8;
+    private static final int PAGE_SIZE = 10;
     private int currentPage = 0;
 
     // All items currently loaded (after filter/search applied)
@@ -340,6 +342,11 @@ public class AdminController {
     @FXML
     private void handleSearch() {
         applyFilters();
+    }
+
+    @FXML
+    private void handleRefresh() {
+        loadDashboard();
     }
 
     // =========================================================

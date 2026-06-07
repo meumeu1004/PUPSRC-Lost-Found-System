@@ -124,9 +124,11 @@
 
                 <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: #710912; -fx-background-radius: 10;">
                     <padding><Insets bottom="8.0" left="15.0" right="15.0" top="8.0" /></padding>
-                    <ImageView fitHeight="28.0" fitWidth="26.0" rotate="-8.1">
-                        <Image url="@../media/searchicon.png" />
-                    </ImageView>
+                    <StackPane onMouseClicked="#handleRefresh" style="-fx-cursor: hand;" prefHeight="30.0" prefWidth="30.0" alignment="CENTER">
+                        <ImageView fx:id="refreshIcon" fitHeight="32.0" fitWidth="30.0" rotate="-8.1">
+                            <Image url="@../media/refresh.png" />
+                        </ImageView>
+                    </StackPane>
                     <TextField fx:id="searchField" onAction="#handleSearch" promptText="Search Item, Keywords..." style="-fx-background-radius: 5;" HBox.hgrow="ALWAYS" />
                     <ComboBox fx:id="sortCombo" prefWidth="140.0" promptText="Sort by" />
                     <ComboBox fx:id="categoryCombo" prefWidth="150.0" promptText="All Category" />
