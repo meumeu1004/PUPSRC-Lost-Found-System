@@ -324,12 +324,20 @@ public class PostItemFormController {
             showAlert("Validation Error", "Color is required.");
             return false;
         }
+        if (!colorField.getText().trim().matches("^[a-zA-Z\\s]+$")) {
+            showAlert("Validation Error", "Color must contain letters only.");
+            return false;
+        }
         if (descArea.getText().isBlank() || descArea.getText().trim().length() < 10) {
             showAlert("Validation Error", "Description must be at least 10 characters.");
             return false;
         }
         if (reporterNameField.getText().isBlank()) {
             showAlert("Validation Error", "Reporter name is required.");
+            return false;
+        }
+        if (!reporterNameField.getText().trim().matches("^[a-zA-Z\\s.,-]+$")) {
+            showAlert("Validation Error", "Reporter name must contain letters only.");
             return false;
         }
         String contactNum = contactNumberField.getText().trim();

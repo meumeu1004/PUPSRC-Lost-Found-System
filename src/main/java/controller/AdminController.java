@@ -12,6 +12,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
@@ -21,12 +22,15 @@ import util.PasswordGuard;
 import database.DBConnection;
 import controller.PasswordManager;
 import controller.ArchiveItemCardController;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 public class AdminController {
 
@@ -71,7 +75,7 @@ public class AdminController {
     private final AuditLogDAO  auditDAO = new AuditLogDAO();
 
     // ── Pagination state ──────────────────────────────────────
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 25;
     private int currentPage = 0;
 
     // All items currently loaded (after filter/search applied)
@@ -86,6 +90,11 @@ public class AdminController {
     // Date formatter
     private static final DateTimeFormatter UI_DATE =
             DateTimeFormatter.ofPattern("MMM dd, yyyy");
+
+    // Combo icons — loaded once, reused across methods
+    private Image sortImg;
+    private Image categoryImg;
+    private Image typeImg;
 
     // =========================================================
     // INITIALIZE
@@ -133,7 +142,66 @@ public class AdminController {
         typeCombo.getStyleClass().add("compact-dropdown");
         typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
         typeCombo.setPadding(new Insets(0));
-        typeCombo.setOnAction(e -> applyFilters());
+
+        // ── Load images ONCE using class reference (reliable in modular projects) ──
+        sortImg     = new Image(Objects.requireNonNull(
+                AdminController.class.getResourceAsStream("/media/sortingarrow.png")));
+        categoryImg = new Image(Objects.requireNonNull(
+                AdminController.class.getResourceAsStream("/media/tagicon.png")));
+        typeImg     = new Image(Objects.requireNonNull(
+                AdminController.class.getResourceAsStream("/media/foldericon.png")));
+
+        // ── Sort ComboBox ──
+        sortCombo.setButtonCell(new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                ImageView icon = new ImageView(sortImg);
+                icon.setFitHeight(16);
+                icon.setFitWidth(16);
+                Label lbl = new Label(item == null || empty ? "  Sort by" : "  " + item);
+                lbl.setGraphic(icon);
+                lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
+                setGraphic(lbl);
+                setText(null);
+            }
+        });
+
+        // ── Category ComboBox ──
+        categoryCombo.setButtonCell(new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                ImageView icon = new ImageView(categoryImg);
+                icon.setFitHeight(16);
+                icon.setFitWidth(16);
+                Label lbl = new Label(item == null || empty ? "  Category" : "  " + item);
+                lbl.setGraphic(icon);
+                lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
+                setGraphic(lbl);
+                setText(null);
+            }
+        });
+
+        // ── Type ComboBox ──
+        typeCombo.setButtonCell(new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                ImageView icon = new ImageView(typeImg);
+                icon.setFitHeight(16);
+                icon.setFitWidth(16);
+                Label lbl = new Label(item == null || empty ? "  Type" : "  " + item);
+                lbl.setGraphic(icon);
+                lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
+                setGraphic(lbl);
+                setText(null);
+            }
+        });
+
+        // =============================================
+        // ICON CODE ENDS HERE
+        // =============================================
 
         sortCombo.setOnAction(e -> applyFilters());
         categoryCombo.setOnAction(e -> applyFilters());
@@ -428,6 +496,29 @@ public class AdminController {
                     "Unresolved Lost", "Unclaimed Found"
             );
             typeCombo.setValue("All Types");
+            typeCombo.setPrefWidth(220.0);
+
+            // Hide sort and category combos in archive — type combo only
+            sortCombo.setVisible(false);
+            sortCombo.setManaged(false);
+            categoryCombo.setVisible(false);
+            categoryCombo.setManaged(false);
+
+            // Archive typeCombo — folder icon, same as main dashboard
+            typeCombo.setButtonCell(new ListCell<String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    ImageView icon = new ImageView(typeImg);
+                    icon.setFitHeight(16);
+                    icon.setFitWidth(16);
+                    Label lbl = new Label(item == null || empty ? "  All Types" : "  " + item);
+                    lbl.setGraphic(icon);
+                    lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
+                    setGraphic(lbl);
+                    setText(null);
+                }
+            });
 
         } else {
             // ── Returning to dashboard ────────────────────────────
@@ -444,6 +535,35 @@ public class AdminController {
             typeCombo.getItems().clear();
             typeCombo.getItems().addAll("All Types", "Lost", "Found");
             typeCombo.setValue("All Types");
+            typeCombo.setPrefWidth(155.0);
+
+            // Restore sort and category combos for main dashboard
+            sortCombo.setVisible(true);
+            sortCombo.setManaged(true);
+            categoryCombo.setVisible(true);
+            categoryCombo.setManaged(true);
+
+            // Restore original width for main dashboard
+            typeCombo.setPrefWidth(155.0);
+
+            // Restore icon button cell for main dashboard typeCombo
+            typeCombo.setButtonCell(new ListCell<String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    ImageView icon = new ImageView(typeImg);
+                    icon.setFitHeight(16);
+                    icon.setFitWidth(16);
+                    Label lbl = new Label(item == null || empty ? "  Type" : "  " + item);
+                    lbl.setGraphic(icon);
+                    lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
+                    setGraphic(lbl);
+                    setText(null);
+                }
+            });
+
+            // Widen archive typeCombo to fit longest option "Unclaimed Found"
+            typeCombo.setPrefWidth(220.0);
 
             // ADD THIS: Apply compact style for main dashboard
             typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
@@ -619,7 +739,7 @@ public class AdminController {
         if (item instanceof FoundItem found) recordStatus = found.getRecordStatus();
 
         String fxmlPath = "Archived".equals(recordStatus)
-                ? "/view/PostItemViewArchive.fxml"
+                ? "/view/ArchiveViewSummary.fxml"
                 : "/view/PostItemView.fxml";
 
         try {
@@ -639,7 +759,12 @@ public class AdminController {
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
-            loadDashboard();
+            if (showingArchive) {
+                refreshStats();
+                applyFilters();
+            } else {
+                loadDashboard();
+            }
 
         } catch (IOException e) {
             e.printStackTrace();

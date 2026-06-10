@@ -122,17 +122,25 @@
                     </StackPane>
                 </HBox>
 
-                <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: #710912; -fx-background-radius: 10;">
-                    <padding><Insets bottom="8.0" left="15.0" right="15.0" top="8.0" /></padding>
-                    <StackPane onMouseClicked="#handleRefresh" style="-fx-cursor: hand;" prefHeight="30.0" prefWidth="30.0" alignment="CENTER">
-                        <ImageView fx:id="refreshIcon" fitHeight="32.0" fitWidth="30.0" rotate="-8.1">
-                            <Image url="@../media/refresh.png" />
+                <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: #710912; -fx-background-radius: 10;">
+                    <padding><Insets bottom="12.0" left="20.0" right="20.0" top="12.0" /></padding>
+
+                    <HBox alignment="CENTER_LEFT" spacing="8.0"
+                          style="-fx-background-color: white; -fx-background-radius: 8;"
+                          prefHeight="36.0" HBox.hgrow="ALWAYS">
+                        <padding><Insets left="10.0" right="10.0" /></padding>
+                        <ImageView fitHeight="18.0" fitWidth="18.0">
+                            <Image url="@../media/searchicon.png" />
                         </ImageView>
-                    </StackPane>
-                    <TextField fx:id="searchField" onAction="#handleSearch" promptText="Search Item, Keywords..." style="-fx-background-radius: 5;" HBox.hgrow="ALWAYS" />
-                    <ComboBox fx:id="sortCombo" prefWidth="140.0" promptText="Sort by" />
-                    <ComboBox fx:id="categoryCombo" prefWidth="150.0" promptText="All Category" />
-                    <ComboBox fx:id="typeCombo" prefWidth="150.0" promptText="All Type" />
+                        <TextField fx:id="searchField" onAction="#handleSearch"
+                                   promptText="Search Item, Keywords..."
+                                   style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 14px;"
+                                   prefHeight="36.0" HBox.hgrow="ALWAYS" />
+                    </HBox>
+
+                    <ComboBox fx:id="sortCombo" prefWidth="155.0" prefHeight="36.0" style="-fx-font-size: 14px; -fx-background-radius: 8;" />
+                    <ComboBox fx:id="categoryCombo" prefWidth="185.0" prefHeight="36.0" style="-fx-font-size: 14px; -fx-background-radius: 8;" />
+                    <ComboBox fx:id="typeCombo" prefWidth="155.0" prefHeight="36.0" style="-fx-font-size: 14px; -fx-background-radius: 8;" />
                 </HBox>
 
                 <GridPane fx:id="itemGrid" hgap="25.0" vgap="25.0">

@@ -39,6 +39,8 @@ public class PostItemViewArchiveController {
     @FXML private DatePicker       itemDatePicker;
     @FXML private TextArea         descArea;
     @FXML private Label            imagePlaceholderLabel;
+    @FXML private Label            proofPlaceholder;
+    @FXML private ImageView        proofImageView;
     @FXML private ImageView        previewImageView;
 
     // ── Buttons (identical to PostItemViewController) ─────────
@@ -139,6 +141,33 @@ public class PostItemViewArchiveController {
                             claim.getClaimDate() != null ? claim.getClaimDate() : "Not Applicable");
                     verifiedByValue.setText(
                             claim.getVerifiedBy() != null ? claim.getVerifiedBy() : "Admin");
+
+                    // DISPLAY PROOF IMAGE
+                    String proofPath = claim.getProofImagePath();
+                    if (proofPath != null && !proofPath.isBlank()) {
+                        try {
+                            java.io.File file = new java.io.File(proofPath);
+                            if (file.exists()) {
+                                proofImageView.setImage(new Image(file.toURI().toString()));
+                                proofImageView.setVisible(true);
+                                proofPlaceholder.setVisible(false);
+                            } else {
+                                proofPlaceholder.setText("Proof image file not found");
+                                proofPlaceholder.setVisible(true);
+                                proofImageView.setVisible(false);
+                            }
+                        } catch (Exception e) {
+                            proofPlaceholder.setText("Unable to load proof image");
+                            proofPlaceholder.setVisible(true);
+                            proofImageView.setVisible(false);
+                            e.printStackTrace();
+                        }
+                    } else {
+                        proofPlaceholder.setText("No proof image uploaded");
+                        proofPlaceholder.setVisible(true);
+                        proofImageView.setVisible(false);
+                    }
+
                 } else {
                     // Status says Claimed but no record found
                     setNoClaimantDefaults();
@@ -164,6 +193,9 @@ public class PostItemViewArchiveController {
         claimantEmailValue.setText("—");
         claimDateValue.setText("Not Applicable");
         verifiedByValue.setText("Admin");
+        proofPlaceholder.setText("No proof image available");
+        proofPlaceholder.setVisible(true);
+        proofImageView.setVisible(false);
     }
 
     // =========================================================

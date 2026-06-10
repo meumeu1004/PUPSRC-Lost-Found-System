@@ -78,3 +78,48 @@
     -fx-padding: 5 10 5 10;
     -fx-cell-size: 25px;
 }
+
+/* ComboBox font size fix */
+.combo-box .list-cell {
+    -fx-font-size: 14px;
+}
+
+.combo-box .text-field {
+    -fx-font-size: 14px;
+}
+
+.combo-base {
+    -fx-font-size: 14px;
+}
+
+.combo-box .list-view {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.combo-box-base {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.text-area:disabled .content {
+    -fx-text-fill: #333333;
+}
+
+.text-area:focused .content,
+.text-area .content {
+    -fx-text-fill: #333333;
+}
+
+.combo-box-popup {
+    -fx-skin: "com.sun.javafx.scene.control.skin.ComboBoxListViewSkin";
+}
+
+.combo-box .list-view {
+    -fx-pref-height: 200px;
+}

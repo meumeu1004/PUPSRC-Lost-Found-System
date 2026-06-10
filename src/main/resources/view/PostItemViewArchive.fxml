@@ -126,7 +126,7 @@
                         <!-- Description -->
                         <TextArea fx:id="descArea" editable="false" prefHeight="85.0"
                                   promptText="Add details (Last location, distinguishing features)..."
-                                  style="-fx-control-inner-background: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"
+                                  style="-fx-control-inner-background: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5; -fx-text-fill: #333333;"
                                   wrapText="true"
                                   GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
 
@@ -161,6 +161,9 @@
              Claimant section shown for Found items only.
              Lost items only see archive info.
         ═════════════════════════════════════════════════════════= -->
+        <ScrollPane fitToWidth="true" prefHeight="220.0" maxHeight="220.0"
+                    style="-fx-background-color: transparent; -fx-border-color: #710912; -fx-border-radius: 5; -fx-background-radius: 5;"
+                    VBox.vgrow="NEVER">
         <VBox spacing="10.0"
               style="-fx-background-color: #FFF9F9;
                      -fx-border-color: #710912;
@@ -226,11 +229,21 @@
                                 <Label fx:id="verifiedByValue" text="Admin" textFill="#5b5b5b" />
                             </children>
                         </HBox>
+                        <HBox spacing="10.0" alignment="TOP_LEFT">
+                            <children>
+                                <Label style="-fx-font-weight: bold;" text="Proof of Ownership:" />
+                                <VBox spacing="5.0">
+                                    <Label fx:id="proofPlaceholder" text="No proof image provided" textFill="#5b5b5b" style="-fx-font-style: italic;" />
+                                    <ImageView fx:id="proofImageView" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" visible="false" />
+                                </VBox>
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
 
             </children>
         </VBox>
+        </ScrollPane>
 
         <Separator />
 
