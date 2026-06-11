@@ -3,6 +3,7 @@ package dao;
 import database.DBConnection;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,6 +116,16 @@ public class AuditLogDAO {
         }
 
         return logs;
+    }
+
+    // =========================================================
+    // TIME HELPER
+    // =========================================================
+    private static final java.time.ZoneId MANILA = java.time.ZoneId.of("Asia/Manila");
+
+    private LocalDateTime toManila(ResultSet rs, String col) throws SQLException {
+        java.time.OffsetDateTime odt = rs.getObject(col, java.time.OffsetDateTime.class);
+        return odt != null ? odt.atZoneSameInstant(MANILA).toLocalDateTime() : null;
     }
 
     // =========================================================

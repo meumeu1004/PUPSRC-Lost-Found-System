@@ -581,6 +581,16 @@ public class LostItemDAO {
     }
 
     // =========================================================
+    // TIME HELPER
+    // =========================================================
+    private static final java.time.ZoneId MANILA = java.time.ZoneId.of("Asia/Manila");
+
+    private LocalDateTime toManila(ResultSet rs, String col) throws SQLException {
+        java.time.OffsetDateTime odt = rs.getObject(col, java.time.OffsetDateTime.class);
+        return odt != null ? odt.atZoneSameInstant(MANILA).toLocalDateTime() : null;
+    }
+
+    // =========================================================
     // MAPPER
     // =========================================================
     private LostItem map(ResultSet rs) throws SQLException {
@@ -592,10 +602,10 @@ public class LostItemDAO {
                 rs.getString("color"),
                 rs.getString("image_path"),
                 rs.getString("record_status"),
-                rs.getObject("created_at", LocalDateTime.class),
-                rs.getObject("updated_at", LocalDateTime.class),
+                toManila(rs, "created_at"),
+                toManila(rs, "updated_at"),
                 rs.getString("archived_reason"),
-                rs.getObject("archived_at",  LocalDateTime.class),
+                toManila(rs, "archived_at"),
                 rs.getString("item_status"),
                 rs.getString("owner_name"),
                 rs.getString("owner_contact_num"),

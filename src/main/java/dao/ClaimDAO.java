@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class ClaimDAO {
     public boolean insertClaimAndMarkClaimed(Claim claim) {
         String sqlClaim = """
@@ -324,8 +325,18 @@ public class ClaimDAO {
                 rs.getDate("claim_date") != null ? rs.getDate("claim_date").toLocalDate() : null,
                 rs.getString("verified_by"),
                 rs.getString("remarks"),
-                rs.getTimestamp("created_at"),
-                rs.getTimestamp("updated_at")
+                toManila(rs, "created_at"),
+                toManila(rs, "updated_at")
         );
+    }
+
+    // =========================================================
+    // TIME HELPER
+    // =========================================================
+    private static final java.time.ZoneId MANILA = java.time.ZoneId.of("Asia/Manila");
+
+    private LocalDateTime toManila(ResultSet rs, String col) throws SQLException {
+        java.time.OffsetDateTime odt = rs.getObject(col, java.time.OffsetDateTime.class);
+        return odt != null ? odt.atZoneSameInstant(MANILA).toLocalDateTime() : null;
     }
 }
