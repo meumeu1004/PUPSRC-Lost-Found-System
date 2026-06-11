@@ -18,7 +18,7 @@
                     <font><Font size="22.0" /></font>
                 </Label>
                 <Region HBox.hgrow="ALWAYS" />
-                <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-cursor: hand;" text="✕" textFill="#710912"/>
+                <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-cursor: hand;" textFill="#710912"/>
             </children>
         </HBox>
 

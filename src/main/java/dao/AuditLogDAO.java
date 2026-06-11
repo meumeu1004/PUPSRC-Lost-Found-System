@@ -29,7 +29,7 @@ public class AuditLogDAO {
                     created_at,
                     updated_at
                 )
-                VALUES (?, ?, ?, ?::jsonb, ?::jsonb, ?, NOW(), NOW())
+                VALUES (?, ?, ?, ?::jsonb, ?::jsonb, ?, NOW() AT TIME ZONE 'Asia/Manila', NOW() AT TIME ZONE 'Asia/Manila')
                 """;
 
         try (Connection conn = DBConnection.getConnection();

@@ -10,41 +10,55 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.FoundItem;
 import model.LostItem;
 import util.PasswordGuard;
 import database.DBConnection;
-import controller.PasswordManager;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 
 public class PostItemViewController {
 
-    // ── FXML fields ──────────────────────────────────────────
-    @FXML private Label              titleLabel;
-    @FXML private Label              itemTypeLabel;
-    @FXML private Label              itemDateLabel;
-    @FXML private TextField          itemNameField;
-    @FXML private ComboBox<String>   categoryPicker;
-    @FXML private TextField          colorField;
-    @FXML private TextField          reporterNameField;
-    @FXML private TextField          contactNumberField;
-    @FXML private TextField          emailField;
-    @FXML private DatePicker         itemDatePicker;
-    @FXML private TextArea           descArea;
-    @FXML private Label              imagePlaceholderLabel;
-    @FXML private ImageView          previewImageView;
+    // ── Header ────────────────────────────────────────────────
+    @FXML private Label     titleLabel;
 
-    // ── Admin action buttons ──────────────────────────────────
-    @FXML private Button             editButton;
-    @FXML private Button             markFoundButton;
-    @FXML private Button             claimButton;
-    @FXML private Button             archiveButton;
-    @FXML private Button             restoreButton;
-    @FXML private Button             deleteButton;
+    // ── Item Information ──────────────────────────────────────
+    @FXML private Label     itemNameValue;
+    @FXML private Label     categoryValue;
+    @FXML private Label     colorValue;
+    @FXML private Label     itemTypeValue;
+    @FXML private Label     itemDateLabel;       // "Date Lost" or "Date Found"
+    @FXML private Label     itemDateValue;
+    @FXML private Label     itemStatusValue;
+    @FXML private Label     descriptionValue;
+
+    // ── Reporter / Finder Information ─────────────────────────
+    @FXML private Label     reporterSectionLabel; // "Reporter Information" / "Finder Information"
+    @FXML private Label     reporterNameValue;
+    @FXML private Label     contactValue;
+    @FXML private Label     emailValue;
+
+    // ── Record Information ────────────────────────────────────
+    @FXML private Label     dateReportedValue;
+    @FXML private Label     lastUpdatedValue;
+
+    // ── Image ─────────────────────────────────────────────────
+    @FXML private Label     imagePlaceholderLabel;
+    @FXML private ImageView previewImageView;
+
+    // ── Find Possible Matches row ─────────────────────────────
+    @FXML private HBox      findMatchesRow;
+    @FXML private Button    findMatchesButton;
+
+    // ── Action Buttons ────────────────────────────────────────
+    @FXML private Button    editButton;
+    @FXML private Button    markFoundButton;
+    @FXML private Button    claimButton;
+    @FXML private Button    archiveButton;
 
     // ── State ─────────────────────────────────────────────────
     private LostItem        existingLost;
@@ -56,10 +70,11 @@ public class PostItemViewController {
     private final FoundItemDAO foundDAO = new FoundItemDAO();
     private final AuditLogDAO  auditDAO = new AuditLogDAO();
 
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
+    private static final DateTimeFormatter DATE_FMT     = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+    private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("MMMM dd, yyyy  hh:mm a");
 
     // =========================================================
-    // setItem() — called from AdminController
+    // setItem() — called from AdminController or card controllers
     // =========================================================
     public void setItem(Object item, AdminController adminCtrl) {
         this.adminController = adminCtrl;
@@ -67,28 +82,127 @@ public class PostItemViewController {
         if (item instanceof LostItem lost) {
             this.existingLost = lost;
             populateFromLost(lost);
-            configureButtons("Lost", lost.getItemStatus(), lost.getRecordStatus());
+            configureButtons("Lost", lost.getItemStatus());
         } else if (item instanceof FoundItem found) {
             this.existingFound = found;
             populateFromFound(found);
-            configureButtons("Found", found.getItemStatus(), found.getRecordStatus());
+            configureButtons("Found", found.getItemStatus());
         }
     }
 
     // =========================================================
-    // EDIT — opens PostItemForm pre-filled
+    // POPULATE
     // =========================================================
+    private void populateFromLost(LostItem item) {
+        titleLabel.setText("LOST ITEM DETAILS");
 
+        itemNameValue.setText(orDash(item.getItemName()));
+        categoryValue.setText(orDash(item.getCategory()));
+        colorValue.setText(orDash(item.getColor()));
+        itemTypeValue.setText("Lost");
+        itemDateLabel.setText("Date Lost");
+        itemDateValue.setText(item.getDateLost() != null
+                ? item.getDateLost().format(DATE_FMT) : "—");
+        itemStatusValue.setText(orDash(item.getItemStatus()));
+        descriptionValue.setText(orDash(item.getDescription()));
 
+        reporterSectionLabel.setText("Reporter Information");
+        reporterNameValue.setText(orDash(item.getOwnerName()));
+        contactValue.setText(orDash(item.getOwnerContactNum()));
+        emailValue.setText(orDash(item.getOwnerContactEmail()));
+
+        dateReportedValue.setText(item.getCreatedAt() != null
+                ? item.getCreatedAt().format(DATETIME_FMT) : "—");
+        lastUpdatedValue.setText(item.getUpdatedAt() != null
+                ? item.getUpdatedAt().format(DATETIME_FMT) : "—");
+
+        loadImage(item.getImagePath());
+    }
+
+    private void populateFromFound(FoundItem item) {
+        titleLabel.setText("FOUND ITEM DETAILS");
+
+        itemNameValue.setText(orDash(item.getItemName()));
+        categoryValue.setText(orDash(item.getCategory()));
+        colorValue.setText(orDash(item.getColor()));
+        itemTypeValue.setText("Found");
+        itemDateLabel.setText("Date Found");
+        itemDateValue.setText(item.getDateFound() != null
+                ? item.getDateFound().format(DATE_FMT) : "—");
+        itemStatusValue.setText(orDash(item.getItemStatus()));
+        descriptionValue.setText(orDash(item.getDescription()));
+
+        reporterSectionLabel.setText("Finder Information");
+        reporterNameValue.setText(orDash(item.getFinderName()));
+        contactValue.setText(orDash(item.getFinderContactNum()));
+        emailValue.setText(orDash(item.getFinderContactEmail()));
+
+        dateReportedValue.setText(item.getCreatedAt() != null
+                ? item.getCreatedAt().format(DATETIME_FMT) : "—");
+        lastUpdatedValue.setText(item.getUpdatedAt() != null
+                ? item.getUpdatedAt().format(DATETIME_FMT) : "—");
+
+        loadImage(item.getImagePath());
+    }
+
+    // =========================================================
+    // CONFIGURE BUTTONS
+    // =========================================================
+    private void configureButtons(String type, String itemStatus) {
+
+        // Find Possible Matches — always shown for active items
+        findMatchesRow.setVisible(true);
+        findMatchesRow.setManaged(true);
+
+        // Mark as Found — lost + unresolved only
+        boolean showMarkFound = "Lost".equals(type) && "Unresolved".equals(itemStatus);
+        markFoundButton.setVisible(showMarkFound);
+        markFoundButton.setManaged(showMarkFound);
+
+        // Claim — found + unclaimed only
+        boolean showClaim = "Found".equals(type) && "Unclaimed".equals(itemStatus);
+        claimButton.setVisible(showClaim);
+        claimButton.setManaged(showClaim);
+
+        // Archive always shown for active items (this view is active-only)
+        archiveButton.setVisible(true);
+        archiveButton.setManaged(true);
+    }
+
+    // =========================================================
+    // FIND POSSIBLE MATCHES
+    // =========================================================
+    @FXML
+    private void handleFindMatches() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/view/PossibleMatchesDialog.fxml"));
+            Parent root = loader.load();
+
+            PossibleMatchesController ctrl = loader.getController();
+            Object source = (existingLost != null) ? existingLost : existingFound;
+            ctrl.init(source, adminController);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Find Possible Matches");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================
+    // EDIT
+    // =========================================================
     @FXML
     private void handleEdit() {
-
-        // ── GUARD ─────────────────────────────────────────────
         if (!PasswordGuard.verify(
                 editButton.getScene().getWindow(),
                 "Edit Item",
                 "Enter admin password to edit this item:")) return;
-        // ── END GUARD ─────────────────────────────────────────
 
         try {
             FXMLLoader loader = new FXMLLoader(
@@ -96,19 +210,17 @@ public class PostItemViewController {
             Parent root = loader.load();
 
             PostItemFormController ctrl = loader.getController();
-
-            if (existingLost != null) {
+            if (existingLost != null)
                 ctrl.setMode("edit_lost", existingLost, adminController);
-            } else {
+            else
                 ctrl.setMode("edit_found", existingFound, adminController);
-            }
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
-            handleClose(); // close view after edit completes
+            handleClose();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -143,7 +255,7 @@ public class PostItemViewController {
     }
 
     // =========================================================
-    // CLAIM — opens ClaimDialog
+    // CLAIM
     // =========================================================
     @FXML
     private void handleClaim() {
@@ -178,14 +290,12 @@ public class PostItemViewController {
                 "Archive Item",
                 "Enter admin password to archive this item:")) return;
 
-        // outer try — handles FXML loading
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/view/ArchiveReasonDialog.fxml"));
             Parent root = loader.load();
 
             ArchiveReasonController ctrl = loader.getController();
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Archive Reason");
@@ -195,7 +305,6 @@ public class PostItemViewController {
             String reason = ctrl.getSelectedReason();
             if (reason == null) return;
 
-            // inner try — handles DAO calls
             try {
                 if (existingLost != null) {
                     lostDAO.archive(existingLost.getId(), reason);
@@ -222,118 +331,9 @@ public class PostItemViewController {
             }
 
         } catch (IOException e) {
-            e.printStackTrace(); // FXML failed to load
-        }
-    }
-  
-    // =========================================================
-    // RESTORE
-    // =========================================================
-    @FXML
-    private void handleRestore() {
-        if (!PasswordGuard.verify(
-                restoreButton.getScene().getWindow(),
-                "Restore Item",
-                "Enter admin password to restore this item:")) return;
-
-        try {
-            if (existingLost != null) {
-                lostDAO.restore(existingLost.getId());
-                auditDAO.insertLog(existingLost.getId(), "Lost",
-                        "Restored", "admin",
-                        "{\"record_status\": \"Archived\"}",
-                        "{\"record_status\": \"Active\"}");
-            } else if (existingFound != null) {
-                foundDAO.restore(existingFound.getId());
-                auditDAO.insertLog(existingFound.getId(), "Found",
-                        "Restored", "admin",
-                        "{\"record_status\": \"Archived\"}",
-                        "{\"record_status\": \"Active\"}");
-            }
-            if (adminController != null) adminController.refreshDashboard();
-            handleClose();
-
-        } catch (DBConnection.NoConnectionException e) {
-            PasswordManager.showAlert("No Internet",
-                    "Please connect to the Internet and try again.");
-        } catch (Exception e) {
-            PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
             e.printStackTrace();
         }
     }
-
-
-    // =========================================================
-    // DELETE (soft delete → Deleted)
-    // =========================================================
-    @FXML
-    private void handleDelete() {
-
-        // ── GUARD ─────────────────────────────────────────────
-        if (!PasswordGuard.verify(
-                deleteButton.getScene().getWindow(),
-                "Delete Item",
-                "Enter admin password to permanently delete this item:")) return;
-        // ── END GUARD ─────────────────────────────────────────
-
-        // Extra confirmation — deletion is harder to undo than archive
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirm Delete");
-        confirm.setHeaderText(null);
-        confirm.setContentText("Move this item to the Recycle Bin? It can be restored later.");
-        confirm.getDialogPane().setStyle("-fx-background-color: white;");
-
-        Button okBtn = (Button) confirm.getDialogPane().lookupButton(ButtonType.OK);
-        if (okBtn != null) {
-            okBtn.setStyle("-fx-background-color: #710912; -fx-text-fill: white; -fx-cursor: hand;");
-        }
-
-        confirm.showAndWait().ifPresent(response -> {
-            if (response != ButtonType.OK) return;
-
-            try {
-
-                if (existingLost != null) {
-                    lostDAO.delete(existingLost.getId());
-                    auditDAO.insertLog(existingLost.getId(), "Lost",
-                            "Deleted", "admin",
-                            "{\"record_status\": \"Active\"}",
-                            "{\"record_status\": \"Deleted\"}");
-
-                } else if (existingFound != null) {
-                    foundDAO.delete(existingFound.getId());
-                    auditDAO.insertLog(existingFound.getId(), "Found",
-                            "Deleted", "admin",
-                            "{\"record_status\": \"Active\"}",
-                            "{\"record_status\": \"Deleted\"}");
-                }
-
-                if (adminController != null) {
-                    adminController.refreshDashboard();
-                }
-
-                handleClose();
-
-            } catch (DBConnection.NoConnectionException e) {
-
-                PasswordManager.showAlert(
-                        "No Internet",
-                        "Please connect to the Internet and try again."
-                );
-
-            } catch (Exception e) {
-
-                PasswordManager.showAlert(
-                        "Error",
-                        "Something went wrong. Please try again."
-                );
-
-                e.printStackTrace();
-            }
-        });
-    }
-
-
 
     // =========================================================
     // CLOSE
@@ -345,93 +345,22 @@ public class PostItemViewController {
     }
 
     // =========================================================
-    // PRIVATE HELPERS
+    // HELPERS
     // =========================================================
-
-    /**
-     * Decides which buttons to show based on type, itemStatus,
-     * and recordStatus. No gaps — hidden buttons use managed=false.
-     */
-    private void configureButtons(String type, String itemStatus, String recordStatus) {
-
-        // Edit is always visible
-        editButton.setVisible(true);
-        editButton.setManaged(true);
-
-        boolean isActive   = "Active".equals(recordStatus);
-        boolean isArchived = "Archived".equals(recordStatus);
-
-        // Mark as Found — lost items only, when Unresolved
-        boolean showMarkFound = "Lost".equals(type)
-                && "Unresolved".equals(itemStatus)
-                && isActive;
-        markFoundButton.setVisible(showMarkFound);
-        markFoundButton.setManaged(showMarkFound);
-
-        // Claim — found items only, when Unclaimed
-        boolean showClaim = "Found".equals(type)
-                && "Unclaimed".equals(itemStatus)
-                && isActive;
-        claimButton.setVisible(showClaim);
-        claimButton.setManaged(showClaim);
-
-        // Archive — only when Active
-        archiveButton.setVisible(isActive);
-        archiveButton.setManaged(isActive);
-
-        // Restore — only when Archived
-        restoreButton.setVisible(isArchived);
-        restoreButton.setManaged(isArchived);
-
-        // Delete — only when Archived
-        deleteButton.setVisible(isArchived);
-        deleteButton.setManaged(isArchived);
-    }
-
-    private void populateFromLost(LostItem item) {
-        titleLabel.setText("LOST ITEM DETAILS");
-        itemTypeLabel.setText("Lost");
-        itemDateLabel.setText("Date Lost");
-
-        itemNameField.setText(item.getItemName());
-        categoryPicker.setValue(item.getCategory());
-        colorField.setText(item.getColor());
-        reporterNameField.setText(item.getOwnerName());
-        contactNumberField.setText(item.getOwnerContactNum());
-        emailField.setText(item.getOwnerContactEmail());
-        descArea.setText(item.getDescription());
-
-        if (item.getDateLost() != null) {
-            itemDatePicker.setValue(item.getDateLost());
-        }
-        loadImage(item.getImagePath());
-    }
-
-    private void populateFromFound(FoundItem item) {
-        titleLabel.setText("FOUND ITEM DETAILS");
-        itemTypeLabel.setText("Found");
-        itemDateLabel.setText("Date Found");
-
-        itemNameField.setText(item.getItemName());
-        categoryPicker.setValue(item.getCategory());
-        colorField.setText(item.getColor());
-        reporterNameField.setText(item.getFinderName());
-        contactNumberField.setText(item.getFinderContactNum());
-        emailField.setText(item.getFinderContactEmail());
-        descArea.setText(item.getDescription());
-
-        if (item.getDateFound() != null) {
-            itemDatePicker.setValue(item.getDateFound());
-        }
-        loadImage(item.getImagePath());
-    }
-
     private void loadImage(String path) {
         if (path != null && !path.isBlank()) {
-            previewImageView.setImage(new Image("file:" + path));
-            previewImageView.setVisible(true);
-            imagePlaceholderLabel.setVisible(false);
+            try {
+                previewImageView.setImage(new Image("file:" + path));
+                previewImageView.setVisible(true);
+                imagePlaceholderLabel.setVisible(false);
+            } catch (Exception e) {
+                // image file missing or unreadable — show placeholder
+            }
         }
+    }
+
+    private String orDash(String value) {
+        return (value != null && !value.isBlank()) ? value : "—";
     }
 
     private void showAlert(String title, String message) {

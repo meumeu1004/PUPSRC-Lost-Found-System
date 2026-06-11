@@ -11,6 +11,11 @@ import model.enums.ArchiveReason;
 
 public class AdminApplication extends Application {
 
+    static {
+        java.util.TimeZone.setDefault(
+                java.util.TimeZone.getTimeZone("Asia/Manila"));
+    }
+
     private final LostItemDAO  lostDAO  = new LostItemDAO();
     private final FoundItemDAO foundDAO = new FoundItemDAO();
 

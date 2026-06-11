@@ -193,7 +193,9 @@ public class PostItemFormController {
                     );
                     boolean ok = lostDAO.update(updated);
                     if (ok) auditDAO.insertLog(updated.getId(), "Lost",
-                            "Updated Item Details", "admin", null, null);
+                            "Updated Item Details", "admin",
+                            buildLostJson(existingLost),
+                            buildLostJson(updated));
                     handleResult(ok, "Lost item updated.");
                 }
 
@@ -218,7 +220,9 @@ public class PostItemFormController {
                     );
                     boolean ok = foundDAO.update(updated);
                     if (ok) auditDAO.insertLog(updated.getId(), "Found",
-                            "Updated Item Details", "admin", null, null);
+                            "Updated Item Details", "admin",
+                            buildFoundJson(existingFound),
+                            buildFoundJson(updated));
                     handleResult(ok, "Found item updated.");
                 }
             }
@@ -324,6 +328,14 @@ public class PostItemFormController {
             showAlert("Validation Error", "Color is required.");
             return false;
         }
+        if (!colorField.getText().trim().matches("^[a-zA-Z\\s]+$")) {
+            showAlert("Validation Error", "Color must contain letters only.");
+            return false;
+        }
+        if (!reporterNameField.getText().trim().matches("^[a-zA-Z\\s.,-]+$")) {
+            showAlert("Validation Error", "Reporter name must contain letters only.");
+            return false;
+        }
         if (descArea.getText().isBlank() || descArea.getText().trim().length() < 10) {
             showAlert("Validation Error", "Description must be at least 10 characters.");
             return false;
@@ -368,4 +380,44 @@ public class PostItemFormController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    // =========================================================
+    // AUDIT LOG HELPERS
+    // =========================================================
+    private String buildLostJson(LostItem item) {
+        return String.format(
+                "{\"item_name\": \"%s\", \"category\": \"%s\", \"color\": \"%s\", " +
+                        "\"description\": \"%s\", \"owner_name\": \"%s\", " +
+                        "\"contact\": \"%s\", \"email\": \"%s\", \"date_lost\": \"%s\"}",
+                orEmpty(item.getItemName()),
+                orEmpty(item.getCategory()),
+                orEmpty(item.getColor()),
+                orEmpty(item.getDescription()).replace("\"", "'"),
+                orEmpty(item.getOwnerName()),
+                orEmpty(item.getOwnerContactNum()),
+                orEmpty(item.getOwnerContactEmail()),
+                item.getDateLost() != null ? item.getDateLost().toString() : ""
+        );
+    }
+
+    private String buildFoundJson(FoundItem item) {
+        return String.format(
+                "{\"item_name\": \"%s\", \"category\": \"%s\", \"color\": \"%s\", " +
+                        "\"description\": \"%s\", \"finder_name\": \"%s\", " +
+                        "\"contact\": \"%s\", \"email\": \"%s\", \"date_found\": \"%s\"}",
+                orEmpty(item.getItemName()),
+                orEmpty(item.getCategory()),
+                orEmpty(item.getColor()),
+                orEmpty(item.getDescription()).replace("\"", "'"),
+                orEmpty(item.getFinderName()),
+                orEmpty(item.getFinderContactNum()),
+                orEmpty(item.getFinderContactEmail()),
+                item.getDateFound() != null ? item.getDateFound().toString() : ""
+        );
+    }
+
+    private String orEmpty(String value) {
+        return (value != null) ? value : "";
+    }
+
 }
