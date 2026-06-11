@@ -57,6 +57,12 @@ public class ArchiveReasonController {
         return selectedReason;
     }
 
+    public void preselect(String reason) {
+        if (reason != null && reasonCombo.getItems().contains(reason)) {
+            reasonCombo.setValue(reason);
+        }
+    }
+
     // =========================================================
     // HELPER
     // =========================================================
