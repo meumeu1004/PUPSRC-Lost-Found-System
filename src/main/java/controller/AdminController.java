@@ -131,12 +131,15 @@ public class AdminController {
 
         sortCombo.getItems().addAll("Newest", "Oldest", "Name A-Z", "Name Z-A");
         sortCombo.setValue("Newest");
+        sortCombo.getStyleClass().add("sort-combo");
+        typeCombo.getStyleClass().add("type-combo");
 
         typeCombo.getItems().addAll("All Types", "Lost", "Found");
         typeCombo.setValue("All Types");
         typeCombo.getStyleClass().add("compact-dropdown");
-        typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
+        typeCombo.setStyle("-fx-padding: 0; -fx-background-radius: 8;");
         typeCombo.setPadding(new Insets(0));
+        typeCombo.setPrefWidth(130);
         // Load combo icons
         sortImg     = new Image(Objects.requireNonNull(
                 AdminController.class.getResourceAsStream("/media/sortingarrow.png")));
@@ -184,6 +187,18 @@ public class AdminController {
                 lbl.setGraphic(icon);
                 lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
                 setGraphic(lbl); setText(null);
+            }
+        });
+        typeCombo.setCellFactory(lv -> new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item);
+                    setStyle("-fx-font-size: 14px; -fx-cell-size: 25px;");
+                }
             }
         });
         typeCombo.setOnAction(e -> applyFilters());
@@ -253,10 +268,10 @@ public class AdminController {
             switch (type == null ? "All Types" : type) {
 
                 case "All Lost" ->
-                        allItems.addAll(lostDAO.getAllArchived());
+                        allItems.addAll(lostDAO.filterArchived(keyword, cat, null, sort));
 
                 case "All Found" ->
-                        allItems.addAll(foundDAO.getAllArchived());
+                        allItems.addAll(foundDAO.filterArchived(keyword, cat, null, sort));
 
                 case "Resolved Lost" ->
                         allItems.addAll(lostDAO.filterArchived(keyword, cat, "Found", sort));
@@ -272,8 +287,8 @@ public class AdminController {
 
                 default -> {
                     // "All Types" — show everything archived
-                    allItems.addAll(lostDAO.getAllArchived());
-                    allItems.addAll(foundDAO.getAllArchived());
+                    allItems.addAll(lostDAO.filterArchived(keyword, cat, null, sort));
+                    allItems.addAll(foundDAO.filterArchived(keyword, cat, null, sort));
                 }
             }
         }
@@ -476,6 +491,8 @@ public class AdminController {
                     "Unresolved Lost", "Unclaimed Found"
             );
             typeCombo.setValue("All Types");
+            typeCombo.setPrefWidth(200);
+            typeCombo.getStyleClass().remove("type-combo");
 
         } else {
             // ── Returning to dashboard ────────────────────────────
@@ -494,15 +511,18 @@ public class AdminController {
             typeCombo.setValue("All Types");
 
             // ADD THIS: Apply compact style for main dashboard
-            typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
+            typeCombo.setStyle("-fx-padding: 0; -fx-background-radius: 8;");
             typeCombo.setPadding(new Insets(0));
+            typeCombo.setPrefWidth(130);
+            typeCombo.getStyleClass().add("type-combo");
 
             loadDashboard();
 
             // Force refresh of style after loading
             javafx.application.Platform.runLater(() -> {
-                typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
+                typeCombo.setStyle("-fx-padding: 0; -fx-background-radius: 8;");
                 typeCombo.setPadding(new javafx.geometry.Insets(0));
+                typeCombo.setPrefWidth(130);
             });
 
             return; // loadDashboard() calls applyFilters() internally
@@ -687,7 +707,12 @@ public class AdminController {
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
-            loadDashboard();
+            if (showingArchive) {
+                refreshStats();
+                applyFilters();
+            } else {
+                loadDashboard();
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
