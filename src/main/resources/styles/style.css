@@ -78,3 +78,17 @@
     -fx-padding: 5 10 5 10;
     -fx-cell-size: 25px;
 }
+
+.combo-box-popup {
+    -fx-skin: "com.sun.javafx.scene.control.skin.ComboBoxListViewSkin";
+}
+
+.combo-box .list-view {
+    -fx-pref-height: 200px;
+}
+.sort-combo .list-view {
+    -fx-pref-height: 120px;
+}
+.type-combo .list-view {
+    -fx-pref-height: 100px;
+}
