@@ -15,4 +15,6 @@ module lostandfoundsystem {
     exports model;
     exports database;
     exports dao;
+    exports util;
+    opens util;
 }

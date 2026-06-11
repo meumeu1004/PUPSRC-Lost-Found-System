@@ -1,6 +1,7 @@
 package dao;
 
 import database.DBConnection;
+import model.FoundItem;
 import model.LostItem;
 
 import java.sql.*;
@@ -310,7 +311,7 @@ public class LostItemDAO {
                 SET item_status = 'Found',
                     record_status = 'Archived',
                     archived_reason = 'Marked as Found',
-                    archived_at = NOW()
+                    archived_at = NOW() AT TIME ZONE 'Asia/Manila'
                 WHERE id = ?
                 """;
         
@@ -334,7 +335,7 @@ public class LostItemDAO {
             UPDATE lost_items
             SET record_status   = 'Archived',
                 archived_reason = ?,
-                archived_at     = NOW()
+                archived_at     = NOW() AT TIME ZONE 'Asia/Manila'
             WHERE id = ?
             """;
         try (Connection conn = DBConnection.getConnection();
@@ -358,6 +359,7 @@ public class LostItemDAO {
     public boolean restore(int id) {
         String sql = "UPDATE lost_items " +
                 "SET record_status   = 'Active', " +
+                "    item_status     = 'Unresolved', " +
                 "    archived_reason = NULL, " +
                 "    archived_at     = NULL " +
                 "WHERE id = ?";
@@ -488,10 +490,10 @@ public class LostItemDAO {
         String sql = "UPDATE lost_items " +
                 "SET record_status = 'Archived', " +
                 "    archived_reason = ?, " +
-                "    archived_at = NOW() " +
+                "    archived_at = NOW() AT TIME ZONE 'Asia/Manila' " +
                 "WHERE record_status = 'Active' " +
                 "  AND item_status = 'Unresolved' " +
-                "  AND created_at <= NOW() - (? * INTERVAL '1 day')";
+                "  AND created_at <= NOW() AT TIME ZONE 'Asia/Manila' - (? * INTERVAL '1 day')";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -520,6 +522,61 @@ public class LostItemDAO {
             throw e;
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public List<LostItem> findCandidatesFor(FoundItem found) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT * FROM lost_items
+            WHERE record_status = 'Active'
+              AND item_status   = 'Unresolved'
+            """);
+
+        boolean hasCategory = found.getCategory() != null && !found.getCategory().isBlank();
+        boolean hasColor    = found.getColor()    != null && !found.getColor().isBlank();
+
+        if (hasCategory) sql.append("AND category = ? \n");
+        if (hasColor)    sql.append("AND LOWER(color) = LOWER(?) \n");
+
+        sql.append("ORDER BY created_at DESC LIMIT 500");
+
+        List<LostItem> items = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (hasCategory) stmt.setString(idx++, found.getCategory());
+            if (hasColor)    stmt.setString(idx++, found.getColor());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) items.add(map(rs));
+            }
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return items;
+    }
+
+    public boolean updateArchiveReason(int id, String reason) {
+        String sql = """
+            UPDATE lost_items
+            SET archived_reason = ?
+            WHERE id = ?
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, reason);
+            stmt.setInt(2, id);
+            return stmt.executeUpdate() > 0;
+
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 

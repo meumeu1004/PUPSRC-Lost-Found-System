@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.ImageView?>
+
+<VBox prefWidth="480.0" spacing="0.0"
+      style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3;
+             -fx-background-radius: 5; -fx-border-radius: 5;"
+      xmlns="http://javafx.com/javafx/17.0.12"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.EditClaimInfoController">
+    <padding>
+        <Insets bottom="20.0" left="25.0" right="25.0" top="20.0"/>
+    </padding>
+
+    <children>
+
+        <!-- ── Header ── -->
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <Label text="EDIT CLAIM INFO" textFill="#710912"
+                   style="-fx-font-weight: bold;">
+                <font><Font size="20.0"/></font>
+            </Label>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button onAction="#handleCancel"
+                    style="-fx-background-color: transparent; -fx-cursor: hand;"
+                    text="✕" textFill="#710912">
+                <font><Font name="System Bold" size="18.0"/></font>
+            </Button>
+        </HBox>
+
+        <Separator>
+            <VBox.margin><Insets bottom="14.0" top="8.0"/></VBox.margin>
+        </Separator>
+
+        <!-- ── Form Fields ── -->
+        <VBox spacing="12.0">
+
+            <!-- Claimant Name -->
+            <VBox spacing="4.0">
+                <Label text="Claimed By" textFill="#5b5b5b">
+                    <font><Font name="System Bold" size="13.0"/></font>
+                </Label>
+                <TextField fx:id="claimantNameField" promptText="Full name"
+                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"/>
+            </VBox>
+
+            <!-- Student ID -->
+            <VBox spacing="4.0">
+                <Label text="Student ID" textFill="#5b5b5b">
+                    <font><Font name="System Bold" size="13.0"/></font>
+                </Label>
+                <TextField fx:id="studentIdField" promptText="Student ID"
+                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"/>
+            </VBox>
+
+            <!-- Contact Number -->
+            <VBox spacing="4.0">
+                <Label text="Contact Number" textFill="#5b5b5b">
+                    <font><Font name="System Bold" size="13.0"/></font>
+                </Label>
+                <TextField fx:id="contactField" promptText="Contact number"
+                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"/>
+            </VBox>
+
+            <!-- Email -->
+            <VBox spacing="4.0">
+                <Label text="Email" textFill="#5b5b5b">
+                    <font><Font name="System Bold" size="13.0"/></font>
+                </Label>
+                <TextField fx:id="emailField" promptText="Email address"
+                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"/>
+            </VBox>
+
+            <!-- Claim Date -->
+            <VBox spacing="4.0">
+                <Label text="Claim Date" textFill="#5b5b5b">
+                    <font><Font name="System Bold" size="13.0"/></font>
+                </Label>
+                <DatePicker fx:id="claimDatePicker"
+                            style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"/>
+            </VBox>
+
+            <!-- Verified By -->
+            <VBox spacing="4.0">
+                <Label text="Verified By" textFill="#5b5b5b">
+                    <font><Font name="System Bold" size="13.0"/></font>
+                </Label>
+                <TextField fx:id="verifiedByField" promptText="Admin name"
+                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"/>
+            </VBox>
+
+            <!-- Remarks -->
+            <VBox spacing="4.0">
+                <Label text="Remarks" textFill="#5b5b5b">
+                    <font><Font name="System Bold" size="13.0"/></font>
+                </Label>
+                <TextArea fx:id="remarksArea" promptText="Optional remarks"
+                          prefHeight="70.0" wrapText="true"
+                          style="-fx-control-inner-background: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"/>
+            </VBox>
+
+        </VBox>
+
+        <Separator>
+            <VBox.margin><Insets bottom="12.0" top="16.0"/></VBox.margin>
+        </Separator>
+
+        <!-- Proof of Ownership -->
+        <VBox spacing="4.0">
+            <Label text="Proof of Ownership" textFill="#5b5b5b">
+                <font><Font name="System Bold" size="13.0"/></font>
+            </Label>
+            <VBox spacing="8.0" alignment="CENTER"
+                  style="-fx-border-color: #D3D3D3; -fx-border-radius: 6;
+                 -fx-border-style: dashed; -fx-background-color: #F4F4F4;
+                 -fx-background-radius: 6;">
+                <padding><Insets bottom="12.0" left="12.0" right="12.0" top="12.0"/></padding>
+                <Label fx:id="proofPlaceholder" text="📷  No image uploaded"
+                       textFill="#aaaaaa" style="-fx-font-style: italic; -fx-font-size: 12px;"/>
+                <ImageView fx:id="proofPreview"
+                           fitHeight="150.0" fitWidth="280.0"
+                           preserveRatio="true" visible="false"/>
+                <HBox spacing="8.0" alignment="CENTER">
+                    <Button text="Upload Image" onAction="#handleUploadProof"
+                            style="-fx-background-color: #710912; -fx-text-fill: white;
+                           -fx-cursor: hand; -fx-background-radius: 5;"/>
+                    <Button fx:id="removeProofButton" text="Remove" onAction="#handleRemoveProof"
+                            visible="false" managed="false"
+                            style="-fx-background-color: #A5A5A5; -fx-text-fill: white;
+                           -fx-cursor: hand; -fx-background-radius: 5;"/>
+                </HBox>
+            </VBox>
+        </VBox>
+
+        <!-- ── Buttons ── -->
+        <HBox alignment="CENTER_RIGHT" spacing="8.0">
+            <Button text="SAVE" onAction="#handleSave"
+                    style="-fx-background-color: #710912; -fx-text-fill: white;
+                           -fx-font-weight: bold; -fx-font-size: 13px;
+                           -fx-background-radius: 5; -fx-cursor: hand;"/>
+            <Button text="CANCEL" onAction="#handleCancel"
+                    style="-fx-background-color: #A5A5A5; -fx-text-fill: white;
+                           -fx-font-weight: bold; -fx-font-size: 13px;
+                           -fx-background-radius: 5; -fx-cursor: hand;"/>
+        </HBox>
+
+    </children>
+</VBox>

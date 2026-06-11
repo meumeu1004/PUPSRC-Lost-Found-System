@@ -62,7 +62,7 @@ public class AdminDAO {
 
         String sql = """
                 UPDATE admin_settings
-                SET password_hash = ?, updated_at = NOW()
+                SET password_hash = ?, updated_at = NOW() AT TIME ZONE 'Asia/Manila'
                 WHERE admin_id = ?
                 """;
 
@@ -90,7 +90,7 @@ public class AdminDAO {
 
         String sql = """
                 UPDATE admin_settings
-                SET last_login = NOW()
+                SET last_login = NOW() AT TIME ZONE 'Asia/Manila'
                 WHERE admin_id = ?
                 """;
 
