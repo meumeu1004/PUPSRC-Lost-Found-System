@@ -527,16 +527,14 @@ public class LostItemDAO {
 
     public List<LostItem> findCandidatesFor(FoundItem found) {
         StringBuilder sql = new StringBuilder("""
-            SELECT * FROM lost_items
-            WHERE record_status = 'Active'
-              AND item_status   = 'Unresolved'
-            """);
+        SELECT * FROM lost_items
+        WHERE record_status = 'Active'
+          AND item_status   = 'Unresolved'
+        """);
 
         boolean hasCategory = found.getCategory() != null && !found.getCategory().isBlank();
-        boolean hasColor    = found.getColor()    != null && !found.getColor().isBlank();
 
         if (hasCategory) sql.append("AND category = ? \n");
-        if (hasColor)    sql.append("AND LOWER(color) = LOWER(?) \n");
 
         sql.append("ORDER BY created_at DESC LIMIT 500");
 
@@ -544,9 +542,7 @@ public class LostItemDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
-            int idx = 1;
-            if (hasCategory) stmt.setString(idx++, found.getCategory());
-            if (hasColor)    stmt.setString(idx++, found.getColor());
+            if (hasCategory) stmt.setString(1, found.getCategory());
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) items.add(map(rs));
