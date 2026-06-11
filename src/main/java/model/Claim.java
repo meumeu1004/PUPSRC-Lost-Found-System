@@ -1,7 +1,7 @@
 package model;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Claim {
 
@@ -19,8 +19,8 @@ public class Claim {
     private String verifiedBy;
     private String remarks;
 
-    private java.sql.Timestamp createdAt;
-    private java.sql.Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
     // =====================================================
@@ -40,8 +40,8 @@ public class Claim {
                  LocalDate claimDate,
                  String verifiedBy,
                  String remarks,
-                 Timestamp createdAt,
-                 Timestamp updatedAt) {
+                 LocalDateTime createdAt,
+                 LocalDateTime updatedAt) {
 
         this.claimId = claimId;
         this.foundItemId = foundItemId;
@@ -87,7 +87,7 @@ public class Claim {
     public String getRemarks() { return remarks; }
     public void setRemarks(String remarks) { this.remarks = remarks; }
 
-    public Timestamp getCreatedAt() { return createdAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 
-    public Timestamp getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
