@@ -98,6 +98,11 @@ public class ClaimController {
             return;
         }
 
+        if (proofImagePath == null) {
+            showAlert("Validation Error", "Proof of ownership image is required.");
+            return;
+        }
+
         // ── 2. Verify admin password via bcrypt ──────────────
     try {
         Admin admin = adminDAO.getByUsername("admin");

@@ -1,6 +1,7 @@
 package model;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 
 public class Claim {
 
@@ -13,7 +14,7 @@ public class Claim {
     private String claimantContactEmail;
 
     private String proofImagePath;
-    private String claimDate;
+    private LocalDate claimDate;
 
     private String verifiedBy;
     private String remarks;
@@ -36,7 +37,7 @@ public class Claim {
                  String claimantContactNum,
                  String claimantContactEmail,
                  String proofImagePath,
-                 String claimDate,
+                 LocalDate claimDate,
                  String verifiedBy,
                  String remarks,
                  Timestamp createdAt,
@@ -77,8 +78,8 @@ public class Claim {
     public String getProofImagePath() { return proofImagePath; }
     public void setProofImagePath(String proofImagePath) { this.proofImagePath = proofImagePath; }
 
-    public String getClaimDate() { return claimDate; }
-    public void setClaimDate(String claimDate) { this.claimDate = claimDate; }
+    public LocalDate getClaimDate() { return claimDate; }
+    public void setClaimDate(LocalDate claimDate) { this.claimDate = claimDate; }
 
     public String getVerifiedBy() { return verifiedBy; }
     public void setVerifiedBy(String verifiedBy) { this.verifiedBy = verifiedBy; }

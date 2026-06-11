@@ -4,6 +4,7 @@ import database.DBConnection;
 import model.Claim;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,14 +17,14 @@ public class ClaimDAO {
                 proof_image_path, claim_date, verified_by,
                 remarks, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, NOW(), NOW())
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, NOW() AT TIME ZONE 'Asia/Manila', NOW() AT TIME ZONE 'Asia/Manila')
             """;
         String sqlUpdate = """
             UPDATE found_items 
             SET item_status = 'Claimed',
                 record_status = 'Archived',
                 archived_reason = 'Claimed by Owner',
-                archived_at = NOW()
+                archived_at = NOW() AT TIME ZONE 'Asia/Manila'
             WHERE id = ? AND record_status != 'Deleted'
             """;
 
@@ -79,7 +80,7 @@ public class ClaimDAO {
                     created_at,
                     updated_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, NOW(), NOW())
+                VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE, ?, ?, NOW() AT TIME ZONE 'Asia/Manila', NOW() AT TIME ZONE 'Asia/Manila')
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -268,6 +269,41 @@ public class ClaimDAO {
         return false;
     }
 
+    public boolean updateClaimInfo(Claim claim) {
+        String sql = """
+            UPDATE claims
+            SET claimant_name         = ?,
+                student_id            = ?,
+                claimant_contact_num  = ?,
+                claimant_contact_email = ?,
+                claim_date            = ?,
+                verified_by           = ?,
+                remarks               = ?
+            WHERE claim_id = ?
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, claim.getClaimantName());
+            stmt.setString(2, claim.getStudentId());
+            stmt.setString(3, claim.getClaimantContactNum());
+            stmt.setString(4, claim.getClaimantContactEmail());
+            stmt.setDate(5, claim.getClaimDate() != null
+                    ? java.sql.Date.valueOf(claim.getClaimDate())
+                    : null);
+            stmt.setString(6, claim.getVerifiedBy());
+            stmt.setString(7, claim.getRemarks());
+            stmt.setInt(8, claim.getClaimId());
+            return stmt.executeUpdate() > 0;
+
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // =========================================================
     // MAPPER
     //
@@ -285,7 +321,7 @@ public class ClaimDAO {
                 rs.getString("claimant_contact_num"),
                 rs.getString("claimant_contact_email"),
                 rs.getString("proof_image_path"),
-                rs.getString("claim_date"),
+                rs.getDate("claim_date") != null ? rs.getDate("claim_date").toLocalDate() : null,
                 rs.getString("verified_by"),
                 rs.getString("remarks"),
                 rs.getTimestamp("created_at"),

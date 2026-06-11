@@ -274,7 +274,7 @@ public class FoundItemDAO {
                 UPDATE found_items
             SET record_status   = 'Archived',
                 archived_reason = ?,
-                archived_at     = NOW()
+                archived_at     = NOW() AT TIME ZONE 'Asia/Manila'
             WHERE id = ?
             """;
         try (Connection conn = DBConnection.getConnection();
@@ -298,6 +298,7 @@ public class FoundItemDAO {
     public boolean restore(int id) {
         String sql = "UPDATE found_items " +
                 "SET record_status   = 'Active', " +
+                "    item_status     = 'Unclaimed', " +
                 "    archived_reason = NULL, " +
                 "    archived_at     = NULL " +
                 "WHERE id = ?";
@@ -430,10 +431,10 @@ public class FoundItemDAO {
         String sql = "UPDATE found_items " +
                 "SET record_status = 'Archived', " +
                 "    archived_reason = ?, " +
-                "    archived_at = NOW() " +
+                "    archived_at = NOW() AT TIME ZONE 'Asia/Manila' " +
                 "WHERE record_status = 'Active' " +
                 "  AND item_status = 'Unresolved' " +
-                "  AND created_at <= NOW() - (? * INTERVAL '1 day')";
+                "  AND created_at <= NOW() AT TIME ZONE 'Asia/Manila' - (? * INTERVAL '1 day')";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -447,6 +448,45 @@ public class FoundItemDAO {
         }
     }
 
+    /**
+     * Pre-filters found_items for matching against a given LostItem.
+     * Returns active + unclaimed records, preferring same category/color.
+     */
+    public List<FoundItem> findCandidatesFor(LostItem lost) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT * FROM found_items
+            WHERE record_status = 'Active'
+              AND item_status   = 'Unclaimed'
+            """);
+
+        // Optional narrowing filters
+        boolean hasCategory = lost.getCategory() != null && !lost.getCategory().isBlank();
+        boolean hasColor    = lost.getColor()    != null && !lost.getColor().isBlank();
+
+        if (hasCategory) sql.append("AND category = ? \n");
+        if (hasColor)    sql.append("AND LOWER(color) = LOWER(?) \n");
+
+        sql.append("ORDER BY created_at DESC LIMIT 500");
+
+        List<FoundItem> items = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (hasCategory) stmt.setString(idx++, lost.getCategory());
+            if (hasColor)    stmt.setString(idx++, lost.getColor());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) items.add(map(rs));
+            }
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return items;
+    }
+
     // ========================================================
     // Delete
     // =======================================================
@@ -454,7 +494,7 @@ public class FoundItemDAO {
         String sql = "UPDATE found_items " +
                 "SET record_status = 'Deleted' " +
                 "WHERE record_status = 'Archived' " +
-                "  AND archived_at <= NOW() - (? * INTERVAL '1 day')";
+                "  AND archived_at <= NOW() AT TIME ZONE 'Asia/Manila' - (? * INTERVAL '1 day')";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -464,6 +504,27 @@ public class FoundItemDAO {
             throw e;
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public boolean updateArchiveReason(int id, String reason) {
+        String sql = """
+            UPDATE found_items
+            SET archived_reason = ?
+            WHERE id = ?
+            """;
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, reason);
+            stmt.setInt(2, id);
+            return stmt.executeUpdate() > 0;
+
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 

@@ -1,6 +1,5 @@
 package controller;
 
-import dao.AuditLogDAO;
 import dao.FoundItemDAO;
 import dao.LostItemDAO;
 import javafx.fxml.FXML;
@@ -20,6 +19,10 @@ import util.PasswordGuard;
 import database.DBConnection;
 import controller.PasswordManager;
 import controller.ArchiveItemCardController;
+import javafx.scene.control.ListCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import java.util.Objects;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -61,15 +64,18 @@ public class AdminController {
     @FXML private Button archiveButton;
     @FXML private Button backToMainButton;
     @FXML private Button recentlyDeletedButton;
+
+    private Image sortImg;
+    private Image categoryImg;
+    private Image typeImg;
  
 
     // ── DAOs ─────────────────────────────────────────────────
     private final LostItemDAO  lostDAO  = new LostItemDAO();
     private final FoundItemDAO foundDAO = new FoundItemDAO();
-    private final AuditLogDAO  auditDAO = new AuditLogDAO();
 
     // ── Pagination state ──────────────────────────────────────
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = 25;
     private int currentPage = 0;
 
     // All items currently loaded (after filter/search applied)
@@ -131,6 +137,55 @@ public class AdminController {
         typeCombo.getStyleClass().add("compact-dropdown");
         typeCombo.setStyle("-fx-padding: 0; -fx-cell-size: 25px;");
         typeCombo.setPadding(new Insets(0));
+        // Load combo icons
+        sortImg     = new Image(Objects.requireNonNull(
+                AdminController.class.getResourceAsStream("/media/sortingarrow.png")));
+        categoryImg = new Image(Objects.requireNonNull(
+                AdminController.class.getResourceAsStream("/media/tagicon.png")));
+        typeImg     = new Image(Objects.requireNonNull(
+                AdminController.class.getResourceAsStream("/media/foldericon.png")));
+
+        // Sort ComboBox icon
+        sortCombo.setButtonCell(new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                ImageView icon = new ImageView(sortImg);
+                icon.setFitHeight(16); icon.setFitWidth(16);
+                Label lbl = new Label(item == null || empty ? "  Sort by" : "  " + item);
+                lbl.setGraphic(icon);
+                lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
+                setGraphic(lbl); setText(null);
+            }
+        });
+
+        // Category ComboBox icon
+        categoryCombo.setButtonCell(new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                ImageView icon = new ImageView(categoryImg);
+                icon.setFitHeight(16); icon.setFitWidth(16);
+                Label lbl = new Label(item == null || empty ? "  Category" : "  " + item);
+                lbl.setGraphic(icon);
+                lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
+                setGraphic(lbl); setText(null);
+            }
+        });
+
+        // Type ComboBox icon
+        typeCombo.setButtonCell(new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                ImageView icon = new ImageView(typeImg);
+                icon.setFitHeight(16); icon.setFitWidth(16);
+                Label lbl = new Label(item == null || empty ? "  Type" : "  " + item);
+                lbl.setGraphic(icon);
+                lbl.setStyle("-fx-text-fill: #333333; -fx-font-size: 14px;");
+                setGraphic(lbl); setText(null);
+            }
+        });
         typeCombo.setOnAction(e -> applyFilters());
 
         sortCombo.setOnAction(e -> applyFilters());

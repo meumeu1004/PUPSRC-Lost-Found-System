@@ -17,54 +17,66 @@ import javafx.stage.Stage;
 import model.Claim;
 import model.FoundItem;
 import model.LostItem;
-import util.DateUtil;
 import util.PasswordGuard;
 import database.DBConnection;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class PostItemViewArchiveController {
 
-    // ── Fields (identical to PostItemViewController) ──────────
-    @FXML private Label            titleLabel;
-    @FXML private Label            itemTypeLabel;
-    @FXML private Label            itemDateLabel;
-    @FXML private TextField        itemNameField;
-    @FXML private ComboBox<String> categoryPicker;
-    @FXML private TextField        colorField;
-    @FXML private TextField        reporterNameField;
-    @FXML private TextField        contactNumberField;
-    @FXML private TextField        emailField;
-    @FXML private DatePicker       itemDatePicker;
-    @FXML private TextArea         descArea;
-    @FXML private Label            imagePlaceholderLabel;
-    @FXML private ImageView        previewImageView;
+    // ── Header ────────────────────────────────────────────────
+    @FXML private Label     titleLabel;
 
-    // ── Buttons (identical to PostItemViewController) ─────────
-    @FXML private Button editButton;
-    @FXML private Button markFoundButton;
-    @FXML private Button claimButton;
-    @FXML private Button archiveButton;
-    @FXML private Button restoreButton;
-    @FXML private Button deleteButton;
+    // ── Item Information ──────────────────────────────────────
+    @FXML private Label     itemNameValue;
+    @FXML private Label     categoryValue;
+    @FXML private Label     colorValue;
+    @FXML private Label     itemTypeValue;
+    @FXML private Label     itemDateLabel;
+    @FXML private Label     itemDateValue;
+    @FXML private Label     itemStatusValue;
+    @FXML private Label     descriptionValue;
 
-    // ── Archive info labels ───────────────────────────────────
-    @FXML private Label archiveReasonValue;
-    @FXML private Label archivedAtValue;
+    // ── Reporter / Finder Information ─────────────────────────
+    @FXML private Label     reporterSectionLabel;
+    @FXML private Label     reporterNameValue;
+    @FXML private Label     contactValue;
+    @FXML private Label     emailValue;
 
-    // ── Claimant section (found items only) ───────────────────
-    @FXML private Separator claimDivider;
-    @FXML private VBox claimantInfoBlock;
+    // ── Record Information ────────────────────────────────────
+    @FXML private Label     dateReportedValue;
+    @FXML private Label     lastUpdatedValue;
+
+    // ── Archive Info ──────────────────────────────────────────
+    @FXML private Label     archiveReasonValue;
+    @FXML private Label     archivedAtValue;
+    @FXML private Button    editArchiveInfoButton;
+
+    // ── Claimant Info ─────────────────────────────────────────
+    @FXML private VBox      claimantSection;
     @FXML private Label     claimantNameValue;
+    @FXML private Label     studentIdValue;
     @FXML private Label     claimantContactValue;
     @FXML private Label     claimantEmailValue;
     @FXML private Label     claimDateValue;
     @FXML private Label     verifiedByValue;
+    @FXML private Label     remarksValue;
+    @FXML private Button    editClaimInfoButton;
+
+    // ── Image ─────────────────────────────────────────────────
+    @FXML private Label     imagePlaceholderLabel;
+    @FXML private ImageView previewImageView;
+
+    // ── Action Buttons ────────────────────────────────────────
+    @FXML private Button    restoreButton;
+    @FXML private Button    deleteButton;
 
     // ── State ─────────────────────────────────────────────────
     private LostItem        existingLost;
     private FoundItem       existingFound;
+    private Claim           existingClaim;
     private AdminController adminController;
 
     // ── DAOs ──────────────────────────────────────────────────
@@ -72,6 +84,9 @@ public class PostItemViewArchiveController {
     private final FoundItemDAO foundDAO = new FoundItemDAO();
     private final AuditLogDAO  auditDAO = new AuditLogDAO();
     private final ClaimDAO     claimDAO = new ClaimDAO();
+
+    private static final DateTimeFormatter DATE_FMT     = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+    private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("MMMM dd, yyyy  hh:mm a");
 
     // =========================================================
     // setItem() — called from AdminController
@@ -82,195 +97,176 @@ public class PostItemViewArchiveController {
         if (item instanceof LostItem lost) {
             this.existingLost = lost;
             populateFromLost(lost);
-            populateArchiveInfo(lost.getArchivedReason(),
-                    lost.getArchivedAt() != null
-                            ? DateUtil.format(lost.getArchivedAt()) : "—");
-            // Lost items — no claimant section
-            claimDivider.setVisible(false);
-            claimDivider.setManaged(false);
-            claimantInfoBlock.setVisible(false);
-            claimantInfoBlock.setManaged(false);
-            configureButtons("Lost", lost.getItemStatus(), lost.getRecordStatus());
+            populateArchiveInfo(lost.getArchivedReason(), lost.getArchivedAt() != null
+                    ? lost.getArchivedAt().format(DATETIME_FMT) : "—");
+
+            // Lost items never have claimant info — hide section entirely
+            claimantSection.setVisible(false);
+            claimantSection.setManaged(false);
 
         } else if (item instanceof FoundItem found) {
             this.existingFound = found;
             populateFromFound(found);
-            populateArchiveInfo(found.getArchivedReason(),
-                    found.getArchivedAt() != null
-                            ? DateUtil.format(found.getArchivedAt()) : "—");
+            populateArchiveInfo(found.getArchivedReason(), found.getArchivedAt() != null
+                    ? found.getArchivedAt().format(DATETIME_FMT) : "—");
             populateClaimantSection(found);
-            configureButtons("Found", found.getItemStatus(), found.getRecordStatus());
         }
     }
 
     // =========================================================
-    // POPULATE ARCHIVE INFO
+    // POPULATE
     // =========================================================
-    private void populateArchiveInfo(String reason, String archivedAt) {
-        archiveReasonValue.setText(reason != null ? reason : "—");
-        archivedAtValue.setText(archivedAt);
+    private void populateFromLost(LostItem item) {
+        titleLabel.setText("LOST ITEM DETAILS (ARCHIVED)");
+
+        itemNameValue.setText(orDash(item.getItemName()));
+        categoryValue.setText(orDash(item.getCategory()));
+        colorValue.setText(orDash(item.getColor()));
+        itemTypeValue.setText("Lost");
+        itemDateLabel.setText("Date Lost");
+        itemDateValue.setText(item.getDateLost() != null
+                ? item.getDateLost().format(DATE_FMT) : "—");
+        itemStatusValue.setText(orDash(item.getItemStatus()));
+        descriptionValue.setText(orDash(item.getDescription()));
+
+        reporterSectionLabel.setText("Reporter Information");
+        reporterNameValue.setText(orDash(item.getOwnerName()));
+        contactValue.setText(orDash(item.getOwnerContactNum()));
+        emailValue.setText(orDash(item.getOwnerContactEmail()));
+
+        dateReportedValue.setText(item.getCreatedAt() != null
+                ? item.getCreatedAt().format(DATETIME_FMT) : "—");
+        lastUpdatedValue.setText(item.getUpdatedAt() != null
+                ? item.getUpdatedAt().format(DATETIME_FMT) : "—");
+
+        loadImage(item.getImagePath());
     }
 
-    // =========================================================
-    // POPULATE CLAIMANT SECTION
-    // =========================================================
+    private void populateFromFound(FoundItem item) {
+        titleLabel.setText("FOUND ITEM DETAILS (ARCHIVED)");
+
+        itemNameValue.setText(orDash(item.getItemName()));
+        categoryValue.setText(orDash(item.getCategory()));
+        colorValue.setText(orDash(item.getColor()));
+        itemTypeValue.setText("Found");
+        itemDateLabel.setText("Date Found");
+        itemDateValue.setText(item.getDateFound() != null
+                ? item.getDateFound().format(DATE_FMT) : "—");
+        itemStatusValue.setText(orDash(item.getItemStatus()));
+        descriptionValue.setText(orDash(item.getDescription()));
+
+        reporterSectionLabel.setText("Finder Information");
+        reporterNameValue.setText(orDash(item.getFinderName()));
+        contactValue.setText(orDash(item.getFinderContactNum()));
+        emailValue.setText(orDash(item.getFinderContactEmail()));
+
+        dateReportedValue.setText(item.getCreatedAt() != null
+                ? item.getCreatedAt().format(DATETIME_FMT) : "—");
+        lastUpdatedValue.setText(item.getUpdatedAt() != null
+                ? item.getUpdatedAt().format(DATETIME_FMT) : "—");
+
+        loadImage(item.getImagePath());
+    }
+
+    private void populateArchiveInfo(String reason, String archivedAt) {
+        archiveReasonValue.setText(orDash(reason));
+        archivedAtValue.setText(orDash(archivedAt));
+    }
+
     private void populateClaimantSection(FoundItem item) {
-        // Always show the divider and block for found items
-        claimDivider.setVisible(true);
-        claimDivider.setManaged(true);
-        claimantInfoBlock.setVisible(true);
-        claimantInfoBlock.setManaged(true);
+        // Always show the section for found items
+        claimantSection.setVisible(true);
+        claimantSection.setManaged(true);
 
         if ("Claimed".equals(item.getItemStatus())) {
-            // Fetch claim record from DB
             try {
                 List<Claim> claims = claimDAO.getClaimsByFoundItem(item.getId());
-
                 if (!claims.isEmpty()) {
-                    Claim claim = claims.get(0); // most recent
+                    Claim claim = claims.get(0);
+                    this.existingClaim = claim;
 
-                    claimantNameValue.setText(
-                            claim.getClaimantName() != null ? claim.getClaimantName() : "No Claimant");
-                    claimantContactValue.setText(
-                            claim.getClaimantContactNum() != null ? claim.getClaimantContactNum() : "—");
-                    claimantEmailValue.setText(
-                            claim.getClaimantContactEmail() != null ? claim.getClaimantContactEmail() : "—");
-                    claimDateValue.setText(
-                            claim.getClaimDate() != null ? claim.getClaimDate() : "Not Applicable");
-                    verifiedByValue.setText(
-                            claim.getVerifiedBy() != null ? claim.getVerifiedBy() : "Admin");
+                    claimantNameValue.setText(orDash(claim.getClaimantName()));
+                    studentIdValue.setText(orDash(claim.getStudentId()));
+                    claimantContactValue.setText(orDash(claim.getClaimantContactNum()));
+                    claimantEmailValue.setText(orDash(claim.getClaimantContactEmail()));
+                    claimDateValue.setText(claim.getClaimDate() != null
+                            ? claim.getClaimDate().format(DATE_FMT)
+                            : "—");
+                    verifiedByValue.setText(orDash(claim.getVerifiedBy()));
+                    remarksValue.setText(orDash(claim.getRemarks()));
+
+                    // Show Edit button only when there's actual claim data
+                    editClaimInfoButton.setVisible(true);
+                    editClaimInfoButton.setManaged(true);
                 } else {
-                    // Status says Claimed but no record found
-                    setNoClaimantDefaults();
+                    setNoClaimantPlaceholder();
                 }
-
             } catch (DBConnection.NoConnectionException e) {
-                // Offline — show defaults silently, don't crash the view
-                setNoClaimantDefaults();
+                setNoClaimantPlaceholder();
             } catch (Exception e) {
-                setNoClaimantDefaults();
+                setNoClaimantPlaceholder();
                 e.printStackTrace();
             }
-
         } else {
-            // Not claimed — show defaults
-            setNoClaimantDefaults();
+            setNoClaimantPlaceholder();
         }
     }
 
-    private void setNoClaimantDefaults() {
-        claimantNameValue.setText("No Claimant");
+    private void setNoClaimantPlaceholder() {
+        claimantNameValue.setText("No claimant info recorded.");
+        studentIdValue.setText("—");
         claimantContactValue.setText("—");
         claimantEmailValue.setText("—");
-        claimDateValue.setText("Not Applicable");
-        verifiedByValue.setText("Admin");
+        claimDateValue.setText("—");
+        verifiedByValue.setText("—");
+        remarksValue.setText("—");
+
+        editClaimInfoButton.setVisible(false);
+        editClaimInfoButton.setManaged(false);
     }
 
     // =========================================================
-    // HANDLERS — identical to PostItemViewController
+    // EDIT ARCHIVE INFO
     // =========================================================
     @FXML
-    private void handleEdit() {
-        if (!PasswordGuard.verify(
-                editButton.getScene().getWindow(),
-                "Edit Item",
-                "Enter admin password to edit this item:")) return;
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/PostItemForm.fxml"));
-            Parent root = loader.load();
-            PostItemFormController ctrl = loader.getController();
-            if (existingLost != null) {
-                ctrl.setMode("edit_lost", existingLost, adminController);
-            } else {
-                ctrl.setMode("edit_found", existingFound, adminController);
-            }
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
-            handleClose();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void handleMarkAsFound() {
-        if (existingLost == null) return;
-        try {
-            boolean ok = lostDAO.markFound(existingLost.getId());
-            if (ok) {
-                auditDAO.insertLog(existingLost.getId(), "Lost",
-                        "Marked Found", "admin",
-                        "{\"item_status\": \"Unresolved\"}",
-                        "{\"item_status\": \"Found\"}");
-                if (adminController != null) adminController.refreshDashboard();
-                handleClose();
-            } else {
-                showAlert("Error", "Failed to update item status.");
-            }
-        } catch (DBConnection.NoConnectionException e) {
-            PasswordManager.showAlert("No Internet",
-                    "Please connect to the Internet and try again.");
-        } catch (Exception e) {
-            PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void handleClaim() {
-        if (existingFound == null) return;
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/ClaimDialog.fxml"));
-            Parent root = loader.load();
-            ClaimController ctrl = loader.getController();
-            ctrl.setTargetItem(existingFound);
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
-            if (adminController != null) adminController.refreshDashboard();
-            handleClose();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void handleArchive() {
-        if (!PasswordGuard.verify(
-                archiveButton.getScene().getWindow(),
-                "Archive Item",
-                "Enter admin password to archive this item:")) return;
+    private void handleEditArchiveInfo() {
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/view/ArchiveReasonDialog.fxml"));
             Parent root = loader.load();
+
             ArchiveReasonController ctrl = loader.getController();
+
+            // Pre-select the current reason
+            String currentReason = archiveReasonValue.getText();
+            if (!"—".equals(currentReason)) ctrl.preselect(currentReason);
+
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Archive Reason");
+            stage.setTitle("Edit Archive Reason");
             stage.setScene(new Scene(root));
             stage.showAndWait();
-            String reason = ctrl.getSelectedReason();
-            if (reason == null) return;
+
+            String newReason = ctrl.getSelectedReason();
+            if (newReason == null || newReason.equals(currentReason)) return;
+
             try {
                 if (existingLost != null) {
-                    lostDAO.archive(existingLost.getId(), reason);
-                    auditDAO.insertLog(existingLost.getId(), "Lost", "Archived", "admin",
-                            "{\"record_status\": \"Active\"}",
-                            "{\"record_status\": \"Archived\", \"reason\": \"" + reason + "\"}");
+                    lostDAO.updateArchiveReason(existingLost.getId(), newReason);
+                    auditDAO.insertLog(existingLost.getId(), "Lost",
+                            "Edited Archive Reason", "admin",
+                            "{\"archived_reason\": \"" + currentReason + "\"}",
+                            "{\"archived_reason\": \"" + newReason + "\"}");
                 } else if (existingFound != null) {
-                    foundDAO.archive(existingFound.getId(), reason);
-                    auditDAO.insertLog(existingFound.getId(), "Found", "Archived", "admin",
-                            "{\"record_status\": \"Active\"}",
-                            "{\"record_status\": \"Archived\", \"reason\": \"" + reason + "\"}");
+                    foundDAO.updateArchiveReason(existingFound.getId(), newReason);
+                    auditDAO.insertLog(existingFound.getId(), "Found",
+                            "Edited Archive Reason", "admin",
+                            "{\"archived_reason\": \"" + currentReason + "\"}",
+                            "{\"archived_reason\": \"" + newReason + "\"}");
                 }
-                if (adminController != null) adminController.refreshDashboard();
-                handleClose();
+                // Refresh the label in-place
+                archiveReasonValue.setText(newReason);
+
             } catch (DBConnection.NoConnectionException e) {
                 PasswordManager.showAlert("No Internet",
                         "Please connect to the Internet and try again.");
@@ -278,31 +274,80 @@ public class PostItemViewArchiveController {
                 PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
                 e.printStackTrace();
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    // =========================================================
+    // EDIT CLAIM INFO
+    // =========================================================
+    @FXML
+    private void handleEditClaimInfo() {
+        if (existingClaim == null) return;
+
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/view/EditClaimInfoDialog.fxml"));
+            Parent root = loader.load();
+
+            EditClaimInfoController ctrl = loader.getController();
+            ctrl.setClaim(existingClaim);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Edit Claim Info");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+
+            if (ctrl.isSaved()) {
+                // Refresh claimant labels from the updated claim
+                Claim updated = ctrl.getUpdatedClaim();
+                claimantNameValue.setText(orDash(updated.getClaimantName()));
+                studentIdValue.setText(orDash(updated.getStudentId()));
+                claimantContactValue.setText(orDash(updated.getClaimantContactNum()));
+                claimantEmailValue.setText(orDash(updated.getClaimantContactEmail()));
+                claimDateValue.setText(updated.getClaimDate() != null
+                        ? updated.getClaimDate().format(DATE_FMT)
+                        : "—");
+                verifiedByValue.setText(orDash(updated.getVerifiedBy()));
+                remarksValue.setText(orDash(updated.getRemarks()));
+                this.existingClaim = updated;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // =========================================================
+    // RESTORE
+    // =========================================================
     @FXML
     private void handleRestore() {
         if (!PasswordGuard.verify(
                 restoreButton.getScene().getWindow(),
                 "Restore Item",
                 "Enter admin password to restore this item:")) return;
+
         try {
             if (existingLost != null) {
                 lostDAO.restore(existingLost.getId());
-                auditDAO.insertLog(existingLost.getId(), "Lost", "Restored", "admin",
+                auditDAO.insertLog(existingLost.getId(), "Lost",
+                        "Restored", "admin",
                         "{\"record_status\": \"Archived\"}",
                         "{\"record_status\": \"Active\"}");
             } else if (existingFound != null) {
                 foundDAO.restore(existingFound.getId());
-                auditDAO.insertLog(existingFound.getId(), "Found", "Restored", "admin",
+                auditDAO.insertLog(existingFound.getId(), "Found",
+                        "Restored", "admin",
                         "{\"record_status\": \"Archived\"}",
                         "{\"record_status\": \"Active\"}");
             }
             if (adminController != null) adminController.refreshDashboard();
             handleClose();
+
         } catch (DBConnection.NoConnectionException e) {
             PasswordManager.showAlert("No Internet",
                     "Please connect to the Internet and try again.");
@@ -312,37 +357,44 @@ public class PostItemViewArchiveController {
         }
     }
 
+    // =========================================================
+    // DELETE
+    // =========================================================
     @FXML
     private void handleDelete() {
         if (!PasswordGuard.verify(
                 deleteButton.getScene().getWindow(),
                 "Delete Item",
                 "Enter admin password to permanently delete this item:")) return;
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Delete");
         confirm.setHeaderText(null);
         confirm.setContentText("Move this item to the Recycle Bin? It can be restored later.");
         confirm.getDialogPane().setStyle("-fx-background-color: white;");
         Button okBtn = (Button) confirm.getDialogPane().lookupButton(ButtonType.OK);
-        if (okBtn != null) {
+        if (okBtn != null)
             okBtn.setStyle("-fx-background-color: #710912; -fx-text-fill: white; -fx-cursor: hand;");
-        }
+
         confirm.showAndWait().ifPresent(response -> {
             if (response != ButtonType.OK) return;
             try {
                 if (existingLost != null) {
                     lostDAO.delete(existingLost.getId());
-                    auditDAO.insertLog(existingLost.getId(), "Lost", "Deleted", "admin",
+                    auditDAO.insertLog(existingLost.getId(), "Lost",
+                            "Deleted", "admin",
                             "{\"record_status\": \"Archived\"}",
                             "{\"record_status\": \"Deleted\"}");
                 } else if (existingFound != null) {
                     foundDAO.delete(existingFound.getId());
-                    auditDAO.insertLog(existingFound.getId(), "Found", "Deleted", "admin",
+                    auditDAO.insertLog(existingFound.getId(), "Found",
+                            "Deleted", "admin",
                             "{\"record_status\": \"Archived\"}",
                             "{\"record_status\": \"Deleted\"}");
                 }
                 if (adminController != null) adminController.refreshDashboard();
                 handleClose();
+
             } catch (DBConnection.NoConnectionException e) {
                 PasswordManager.showAlert("No Internet",
                         "Please connect to the Internet and try again.");
@@ -353,82 +405,31 @@ public class PostItemViewArchiveController {
         });
     }
 
+    // =========================================================
+    // CLOSE
+    // =========================================================
     @FXML
     private void handleClose() {
-        Stage stage = (Stage) editButton.getScene().getWindow();
+        Stage stage = (Stage) restoreButton.getScene().getWindow();
         stage.close();
     }
 
     // =========================================================
-    // POPULATE FIELDS (identical to PostItemViewController)
+    // HELPERS
     // =========================================================
-    private void populateFromLost(LostItem item) {
-        titleLabel.setText("LOST ITEM DETAILS");
-        itemTypeLabel.setText("Lost");
-        itemDateLabel.setText("Date Lost");
-        itemNameField.setText(item.getItemName());
-        categoryPicker.setValue(item.getCategory());
-        colorField.setText(item.getColor());
-        reporterNameField.setText(item.getOwnerName());
-        contactNumberField.setText(item.getOwnerContactNum());
-        emailField.setText(item.getOwnerContactEmail());
-        descArea.setText(item.getDescription());
-        if (item.getDateLost() != null) itemDatePicker.setValue(item.getDateLost());
-        loadImage(item.getImagePath());
-    }
-
-    private void populateFromFound(FoundItem item) {
-        titleLabel.setText("FOUND ITEM DETAILS");
-        itemTypeLabel.setText("Found");
-        itemDateLabel.setText("Date Found");
-        itemNameField.setText(item.getItemName());
-        categoryPicker.setValue(item.getCategory());
-        colorField.setText(item.getColor());
-        reporterNameField.setText(item.getFinderName());
-        contactNumberField.setText(item.getFinderContactNum());
-        emailField.setText(item.getFinderContactEmail());
-        descArea.setText(item.getDescription());
-        if (item.getDateFound() != null) itemDatePicker.setValue(item.getDateFound());
-        loadImage(item.getImagePath());
-    }
-
-    private void configureButtons(String type, String itemStatus, String recordStatus) {
-        editButton.setVisible(true);
-        editButton.setManaged(true);
-        boolean isActive   = "Active".equals(recordStatus);
-        boolean isArchived = "Archived".equals(recordStatus);
-
-        boolean showMarkFound = "Lost".equals(type) && "Unresolved".equals(itemStatus) && isActive;
-        markFoundButton.setVisible(showMarkFound);
-        markFoundButton.setManaged(showMarkFound);
-
-        boolean showClaim = "Found".equals(type) && "Unclaimed".equals(itemStatus) && isActive;
-        claimButton.setVisible(showClaim);
-        claimButton.setManaged(showClaim);
-
-        archiveButton.setVisible(isActive);
-        archiveButton.setManaged(isActive);
-
-        restoreButton.setVisible(isArchived);
-        restoreButton.setManaged(isArchived);
-
-        deleteButton.setVisible(isArchived);
-        deleteButton.setManaged(isArchived);
-    }
-
     private void loadImage(String path) {
         if (path != null && !path.isBlank()) {
-            previewImageView.setImage(new Image("file:" + path));
-            previewImageView.setVisible(true);
-            imagePlaceholderLabel.setVisible(false);
+            try {
+                previewImageView.setImage(new Image("file:" + path));
+                previewImageView.setVisible(true);
+                imagePlaceholderLabel.setVisible(false);
+            } catch (Exception e) {
+                // image missing or unreadable — show placeholder
+            }
         }
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private String orDash(String value) {
+        return (value != null && !value.isBlank()) ? value : "—";
     }
 }
