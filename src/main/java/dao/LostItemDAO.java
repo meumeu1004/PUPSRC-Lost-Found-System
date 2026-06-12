@@ -36,7 +36,7 @@ public class LostItemDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-            return items;
+        return items;
     }
 
     // =========================================================
@@ -150,7 +150,7 @@ public class LostItemDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-            return items;
+        return items;
     }
 
     // =========================================================
@@ -298,7 +298,7 @@ public class LostItemDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-         return false;
+        return false;
     }
 
     // =========================================================
@@ -306,7 +306,7 @@ public class LostItemDAO {
     // =========================================================
     public boolean markFound(int id) {
 
-            String sql = """
+        String sql = """
                 UPDATE lost_items
                 SET item_status = 'Found',
                     record_status = 'Archived',
@@ -314,21 +314,21 @@ public class LostItemDAO {
                     archived_at = NOW() AT TIME ZONE 'Asia/Manila'
                 WHERE id = ?
                 """;
-        
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
-        
-                stmt.setInt(1, id);
-                return stmt.executeUpdate() > 0;
-        
-            } catch (DBConnection.NoConnectionException e) {
-                throw e;
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        
-            return false;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+
+        } catch (DBConnection.NoConnectionException e) {
+            throw e;
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+
+        return false;
+    }
 
     public boolean archive(int id, String reason) {
         String sql = """
@@ -348,8 +348,8 @@ public class LostItemDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-            return false;
-        }
+        return false;
+    }
 
 
     public boolean delete(int id) {
@@ -373,8 +373,8 @@ public class LostItemDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-            return false;
-        }
+        return false;
+    }
 
     //========================================
     // FILTERS FOR ARCHIVED
@@ -405,10 +405,10 @@ public class LostItemDAO {
             sql.append("AND item_status = ? \n");
         }
         sql.append(switch (sortBy == null ? "newest" : sortBy) {
-            case "oldest"    -> "ORDER BY created_at ASC\n";
+            case "oldest"    -> "ORDER BY archived_at ASC NULLS LAST\n";
             case "name_asc"  -> "ORDER BY LOWER(item_name) ASC\n";
             case "name_desc" -> "ORDER BY LOWER(item_name) DESC\n";
-            default          -> "ORDER BY created_at DESC\n";
+            default          -> "ORDER BY archived_at DESC NULLS LAST\n";
         });
         sql.append("LIMIT 300");
 
@@ -493,7 +493,7 @@ public class LostItemDAO {
                 "    archived_at = NOW() AT TIME ZONE 'Asia/Manila' " +
                 "WHERE record_status = 'Active' " +
                 "  AND item_status = 'Unresolved' " +
-                "  AND created_at <= NOW() AT TIME ZONE 'Asia/Manila' - (? * INTERVAL '1 day')";
+                "  AND created_at <= NOW() - (? * INTERVAL '1 day')";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -601,7 +601,7 @@ public class LostItemDAO {
                 toManila(rs, "created_at"),
                 toManila(rs, "updated_at"),
                 rs.getString("archived_reason"),
-                toManila(rs, "archived_at"),
+                rs.getObject("archived_at", java.time.LocalDateTime.class),
                 rs.getString("item_status"),
                 rs.getString("owner_name"),
                 rs.getString("owner_contact_num"),

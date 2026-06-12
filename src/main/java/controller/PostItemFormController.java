@@ -77,6 +77,12 @@ public class PostItemFormController {
                 itemDateLabel.setText("Date Lost");
                 itemDatePicker.setPromptText("Select date item was lost");
                 saveButton.setText("SUBMIT REPORT");
+                itemDatePicker.setDayCellFactory(picker -> new javafx.scene.control.DateCell() {
+                    @Override public void updateItem(LocalDate date, boolean empty) {
+                        super.updateItem(date, empty);
+                        setDisable(empty || date.isAfter(LocalDate.now()));
+                    }
+                });
             }
 
             case "new_found" -> {
@@ -85,6 +91,12 @@ public class PostItemFormController {
                 itemDateLabel.setText("Date Found");
                 itemDatePicker.setPromptText("Select date item was found");
                 saveButton.setText("SUBMIT REPORT");
+                itemDatePicker.setDayCellFactory(picker -> new javafx.scene.control.DateCell() {
+                    @Override public void updateItem(LocalDate date, boolean empty) {
+                        super.updateItem(date, empty);
+                        setDisable(empty || date.isAfter(LocalDate.now()));
+                    }
+                });
             }
 
             case "edit_lost" -> {
@@ -93,6 +105,12 @@ public class PostItemFormController {
                 itemDateLabel.setText("Date Lost");
                 saveButton.setText("SAVE CHANGES");
                 populateFromLost(existingLost);
+                itemDatePicker.setDayCellFactory(picker -> new javafx.scene.control.DateCell() {
+                    @Override public void updateItem(LocalDate date, boolean empty) {
+                        super.updateItem(date, empty);
+                        setDisable(empty || date.isAfter(LocalDate.now()));
+                    }
+                });
             }
 
             case "edit_found" -> {
@@ -101,6 +119,12 @@ public class PostItemFormController {
                 itemDateLabel.setText("Date Found");
                 saveButton.setText("SAVE CHANGES");
                 populateFromFound(existingFound);
+                itemDatePicker.setDayCellFactory(picker -> new javafx.scene.control.DateCell() {
+                    @Override public void updateItem(LocalDate date, boolean empty) {
+                        super.updateItem(date, empty);
+                        setDisable(empty || date.isAfter(LocalDate.now()));
+                    }
+                });
             }
         }
     }
@@ -318,6 +342,10 @@ public class PostItemFormController {
     private boolean validateFields() {
         if (itemNameField.getText().isBlank()) {
             showAlert("Validation Error", "Item name is required.");
+            return false;
+        }
+        if ((mode.equals("new_found") || mode.equals("edit_found")) && imagePath == null) {
+            showAlert("Validation Error", "Image is required for found item reports.");
             return false;
         }
         if (categoryPicker.getValue() == null) {

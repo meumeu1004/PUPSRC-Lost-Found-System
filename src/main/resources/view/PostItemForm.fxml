@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox fx:id="dialogRoot" prefHeight="607.0" prefWidth="688.0" spacing="15.0"
+<VBox fx:id="dialogRoot" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="607.0" prefWidth="688.0" spacing="15.0"
       style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 5; -fx-border-radius: 5;"
       xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
@@ -32,7 +32,7 @@
         <Separator />
 
         <!-- Scrollable Content -->
-        <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" prefHeight="435.0" prefWidth="632.0" style="-fx-background-color: transparent;">
+        <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" prefHeight="435.0" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
             <content>
                 <GridPane hgap="20.0" style="-fx-background-color: white;" vgap="15.0">
                     <columnConstraints>
