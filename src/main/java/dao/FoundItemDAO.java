@@ -287,9 +287,9 @@ public class FoundItemDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-            return
-    false;
-        }
+        return
+                false;
+    }
 
     public boolean delete(int id) {
         return updateRecordStatus(id, "Deleted");
@@ -312,14 +312,14 @@ public class FoundItemDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-            return false;
-        }
+        return false;
+    }
 
     //========================================
     // FILTERS FOR ARCHIVED
     //========================================
     public List<FoundItem> filterArchived(String keyword, String category,
-                                         String status, String sortBy) {
+                                          String status, String sortBy) {
         List<FoundItem> items = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder("""
@@ -344,10 +344,10 @@ public class FoundItemDAO {
             sql.append("AND item_status = ? \n");
         }
         sql.append(switch (sortBy == null ? "newest" : sortBy) {
-            case "oldest"    -> "ORDER BY created_at ASC\n";
+            case "oldest"    -> "ORDER BY archived_at ASC NULLS LAST\n";
             case "name_asc"  -> "ORDER BY LOWER(item_name) ASC\n";
             case "name_desc" -> "ORDER BY LOWER(item_name) DESC\n";
-            default          -> "ORDER BY created_at DESC\n";
+            default          -> "ORDER BY archived_at DESC NULLS LAST\n";
         });
         sql.append("LIMIT 300");
 
@@ -434,7 +434,7 @@ public class FoundItemDAO {
                 "    archived_at = NOW() AT TIME ZONE 'Asia/Manila' " +
                 "WHERE record_status = 'Active' " +
                 "  AND item_status = 'Unresolved' " +
-                "  AND created_at <= NOW() AT TIME ZONE 'Asia/Manila' - (? * INTERVAL '1 day')";
+                "  AND created_at <= NOW() - (? * INTERVAL '1 day')";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -489,7 +489,7 @@ public class FoundItemDAO {
         String sql = "UPDATE found_items " +
                 "SET record_status = 'Deleted' " +
                 "WHERE record_status = 'Archived' " +
-                "  AND archived_at <= NOW() AT TIME ZONE 'Asia/Manila' - (? * INTERVAL '1 day')";
+                "  AND archived_at <= NOW() - (? * INTERVAL '1 day')";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -549,7 +549,7 @@ public class FoundItemDAO {
                 toManila(rs, "created_at"),
                 toManila(rs, "updated_at"),
                 rs.getString("archived_reason"),
-                toManila(rs, "archived_at"),
+                rs.getObject("archived_at", java.time.LocalDateTime.class),
                 rs.getString("finder_name"),
                 rs.getString("finder_contact_num"),
                 rs.getString("finder_contact_email"),
@@ -557,4 +557,4 @@ public class FoundItemDAO {
         );
     }
 
-    }
+}
