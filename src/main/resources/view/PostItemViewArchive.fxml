@@ -27,7 +27,7 @@
             <Region HBox.hgrow="ALWAYS"/>
             <Button onAction="#handleClose"
                     style="-fx-background-color: transparent; -fx-cursor: hand;"
-                    text="✕" textFill="#555555">
+                    textFill="#555555">
                 <font><Font name="System Bold" size="18.0"/></font>
             </Button>
         </HBox>
@@ -161,7 +161,7 @@
                     <!-- ── Archive Info section (with inline Edit button) ── -->
                     <VBox spacing="10.0">
                         <HBox alignment="CENTER_LEFT">
-                            <Label text="Archive Info" textFill="#555555"
+                            <Label text="Archive Information" textFill="#555555"
                                    style="-fx-font-weight: bold; -fx-font-size: 13px;"
                                    HBox.hgrow="ALWAYS"/>
                             <Region HBox.hgrow="ALWAYS"/>
@@ -200,7 +200,7 @@
                     <!-- ── Claimant Info section (found items only, with inline Edit) ── -->
                     <VBox fx:id="claimantSection" spacing="10.0" managed="false" visible="false">
                         <HBox alignment="CENTER_LEFT">
-                            <Label text="Claimant Info" textFill="#555555"
+                            <Label text="Claimant Information" textFill="#555555"
                                    style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Button fx:id="editClaimInfoButton"

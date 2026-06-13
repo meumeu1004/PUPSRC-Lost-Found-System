@@ -185,6 +185,7 @@ public class PostItemViewController {
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
             stage.setTitle("Find Possible Matches");
             stage.setScene(new Scene(root));
             stage.showAndWait();
@@ -217,6 +218,7 @@ public class PostItemViewController {
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
@@ -270,6 +272,7 @@ public class PostItemViewController {
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
@@ -298,6 +301,7 @@ public class PostItemViewController {
             ArchiveReasonController ctrl = loader.getController();
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
             stage.setTitle("Archive Reason");
             stage.setScene(new Scene(root));
             stage.showAndWait();
