@@ -32,7 +32,7 @@ import java.time.format.DateTimeFormatter;
 
 public class AdminController {
 
-  // ── FXML fields ──────────────────────────────────────────
+    // ── FXML fields ──────────────────────────────────────────
     @FXML private Label     dashboardTitleLabel;
     @FXML private Label     totalLostLabel;
     @FXML private Label     totalFoundLabel;
@@ -68,7 +68,7 @@ public class AdminController {
     private Image sortImg;
     private Image categoryImg;
     private Image typeImg;
- 
+
 
     // ── DAOs ─────────────────────────────────────────────────
     private final LostItemDAO  lostDAO  = new LostItemDAO();
@@ -262,6 +262,25 @@ public class AdminController {
             } else {
                 allItems.addAll(lostDAO.filter(keyword, cat, null, sort));
                 allItems.addAll(foundDAO.filter(keyword, cat, null, sort));
+                if ("name_asc".equals(sort) || "name_desc".equals(sort)) {
+                    allItems.sort((a, b) -> {
+                        String nameA = (a instanceof LostItem l) ? l.getItemName().toLowerCase() :
+                                ((FoundItem) a).getItemName().toLowerCase();
+                        String nameB = (b instanceof LostItem l) ? l.getItemName().toLowerCase() :
+                                ((FoundItem) b).getItemName().toLowerCase();
+                        return "name_desc".equals(sort) ? nameB.compareTo(nameA) : nameA.compareTo(nameB);
+                    });
+                } else {
+                    // newest / oldest: re-sort the combined list by createdAt so newest is always first
+                    allItems.sort((a, b) -> {
+                        java.time.LocalDateTime ca = (a instanceof LostItem l) ? l.getCreatedAt() : ((FoundItem) a).getCreatedAt();
+                        java.time.LocalDateTime cb = (b instanceof LostItem l) ? l.getCreatedAt() : ((FoundItem) b).getCreatedAt();
+                        if (ca == null && cb == null) return 0;
+                        if (ca == null) return 1;
+                        if (cb == null) return -1;
+                        return "oldest".equals(sort) ? ca.compareTo(cb) : cb.compareTo(ca);
+                    });
+                }
             }
         } else {
             // ── Archive: granular status options ──────────────────
@@ -275,7 +294,7 @@ public class AdminController {
 
                 case "Resolved Lost" ->
                         allItems.addAll(lostDAO.filterArchived(keyword, cat, "Found", sort));
-                
+
                 case "Unresolved Lost" ->
                         allItems.addAll(lostDAO.filterArchived(keyword, cat, "Unresolved", sort));
 
@@ -289,6 +308,25 @@ public class AdminController {
                     // "All Types" — show everything archived
                     allItems.addAll(lostDAO.filterArchived(keyword, cat, null, sort));
                     allItems.addAll(foundDAO.filterArchived(keyword, cat, null, sort));
+                    if ("name_asc".equals(sort) || "name_desc".equals(sort)) {
+                        allItems.sort((a, b) -> {
+                            String nameA = (a instanceof LostItem l) ? l.getItemName().toLowerCase() :
+                                    ((FoundItem) a).getItemName().toLowerCase();
+                            String nameB = (b instanceof LostItem l) ? l.getItemName().toLowerCase() :
+                                    ((FoundItem) b).getItemName().toLowerCase();
+                            return "name_desc".equals(sort) ? nameB.compareTo(nameA) : nameA.compareTo(nameB);
+                        });
+                    } else {
+                        // newest / oldest: re-sort combined list by archivedAt
+                        allItems.sort((a, b) -> {
+                            java.time.LocalDateTime aa = (a instanceof LostItem l) ? l.getArchivedAt() : ((FoundItem) a).getArchivedAt();
+                            java.time.LocalDateTime ab = (b instanceof LostItem l) ? l.getArchivedAt() : ((FoundItem) b).getArchivedAt();
+                            if (aa == null && ab == null) return 0;
+                            if (aa == null) return 1;
+                            if (ab == null) return -1;
+                            return "oldest".equals(sort) ? aa.compareTo(ab) : ab.compareTo(aa);
+                        });
+                    }
                 }
             }
         }
@@ -564,7 +602,7 @@ public class AdminController {
         archiveBackToMain.setVisible(false); archiveBackToMain.setManaged(false);
         archiveRecentlyDeleted.setVisible(false); archiveRecentlyDeleted.setManaged(false);
     }
-  
+
     @FXML
     private void handleBackToMain() {
         if (showingArchive) {
@@ -704,6 +742,7 @@ public class AdminController {
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
@@ -730,6 +769,7 @@ public class AdminController {
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setResizable(false);
             stage.setScene(new Scene(root));
             stage.showAndWait();
         } catch (IOException e) {
@@ -744,6 +784,7 @@ public class AdminController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(title);
+            stage.setResizable(false);
             stage.setScene(new Scene(root));
             stage.showAndWait();
         } catch (IOException e) {
@@ -796,7 +837,8 @@ public class AdminController {
                 "▶ Search and Filtering Engine - Keyword search with filters\n" +
                 "▶ Admin-Controlled Management - Password-protected environment\n" +
                 "▶ Archive Management System - Soft-deletion for historical records\n" +
-                "▶ Local Database Integration - Secure storage\n\n" +
+                "▶ Cloud Database Integration - Powered by Supabase for secure, reliable storage\n" +
+                "▶ Intelligent Item Matching - Automatically suggests potential matches between lost and found reports based on item name, category, color, and date\n\n" +
                 "DEVELOPED BY:\n" +
                 "OOP Lost & Found Team (BSIT 2-1)\n\n" +
                 "© 2026 Lost and Found System. All rights reserved.\n";
