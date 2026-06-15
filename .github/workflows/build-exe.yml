@@ -2,7 +2,7 @@ name: Build Windows EXE
 
 on:
   push:
-    branches: [ main ]
+    branches: [ build-exe ]
   workflow_dispatch:
 
 jobs:
@@ -38,4 +38,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: LostAndFound-Windows
-          path: target/dist/*.exe# trigger
+          path: target/dist/*.exe
