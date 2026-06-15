@@ -439,16 +439,10 @@ public class AdminController {
 
     // ── Show a loading indicator while the grid is fetching data ──
     private void setGridBusy(boolean busy) {
-        if (busy) {
-            itemGrid.getChildren().clear();
-            Label loading = new Label("Loading...");
-            loading.setStyle(
-                    "-fx-font-size: 15px; -fx-text-fill: #710912; -fx-padding: 40;");
-            itemGrid.add(loading, 0, 0, 4, 1);
-            prevPageBtn.setDisable(true);
-            nextPageBtn.setDisable(true);
-        }
-        // busy=false is handled by renderPage() which replaces the label
+        itemGrid.setOpacity(busy ? 0.4 : 1.0);
+        itemGrid.setMouseTransparent(busy);
+        prevPageBtn.setDisable(busy);
+        nextPageBtn.setDisable(busy);
     }
 
     // =========================================================
@@ -728,10 +722,6 @@ public class AdminController {
             stage.setResizable(false);
             stage.setScene(new Scene(root));
             stage.showAndWait();
-
-            // Async refresh after dialog closes — no UI freeze
-            refreshStatsAsync(showingArchive);
-            applyFiltersAsync();
 
         } catch (IOException e) {
             e.printStackTrace();
