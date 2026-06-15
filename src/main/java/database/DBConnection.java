@@ -3,12 +3,27 @@ package database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import io.github.cdimascio.dotenv.Dotenv;
 
 public class DBConnection {
 
-    private static final String DATABASE_URL      = System.getenv("DB_URL");
-    private static final String DATABASE_USER     = System.getenv("DB_USER");
-    private static final String DATABASE_PASSWORD = System.getenv("DB_PASSWORD");
+    private static final Dotenv dotenv = Dotenv.load();
+
+    private static final String DATABASE_URL =
+            require(dotenv.get("DB_URL"), "DB_URL is missing in .env");
+
+    private static final String DATABASE_USER =
+            require(dotenv.get("DB_USER"), "DB_USER is missing in .env");
+
+    private static final String DATABASE_PASSWORD =
+            require(dotenv.get("DB_PASSWORD"), "DB_PASSWORD is missing in .env");
+
+    private static String require(String value, String errorMsg) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(errorMsg);
+        }
+        return value;
+    }
 
     // Custom exception so controllers can catch connectivity failures
     // specifically without inspecting message strings
