@@ -138,16 +138,6 @@
                             </children>
                         </VBox>
 
-                        <!-- FAQ 11 - Original Q10 -->
-                        <VBox spacing="5.0" style="-fx-background-color: #FFF9F9; -fx-border-color: #710912; -fx-border-radius: 5; -fx-background-radius: 5;">
-                            <padding><Insets bottom="10.0" left="15.0" right="15.0" top="10.0" /></padding>
-                            <children>
-                                <Label text="Q: What contact information is visible to users?" style="-fx-font-weight: bold; -fx-text-fill: #710912;">
-                                    <font><Font size="14.0" /></font>
-                                </Label>
-                                <Label text="A: For privacy protection, reporter contact information (name, phone, email) is hidden by default. This information only becomes visible after entering the admin password and enabling edit mode." textFill="#5b5b5b" wrapText="true" />
-                            </children>
-                        </VBox>
                     </children>
                 </VBox>
             </content>
