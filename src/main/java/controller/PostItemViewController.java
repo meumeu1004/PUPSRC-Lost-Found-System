@@ -236,30 +236,32 @@ public class PostItemViewController {
     @FXML
     private void handleMarkAsFound() {
         if (existingLost == null) return;
-
+    
         if (!PasswordGuard.verify(
                 markFoundButton.getScene().getWindow(),
                 "Mark as Found",
                 "Enter admin password to mark this item as found:")) return;
-
-        try {
-            boolean ok = lostDAO.markFound(existingLost.getId());
-            if (ok) {
+    
+        Task<Boolean> task = new Task<>() {
+            @Override
+            protected Boolean call() {
+                return lostDAO.markFound(existingLost.getId());
+            }
+        };
+    
+        task.setOnSucceeded(e -> {
+            if (task.getValue()) {
                 auditDAO.insertLog(existingLost.getId(), "Lost",
                         "Marked Found", "admin",
                         "{\"item_status\": \"Unresolved\"}",
                         "{\"item_status\": \"Found\"}");
-                return ok;
-            }
-        };
-        task.setOnSucceeded(e -> {
-            if (task.getValue()) {
                 if (adminController != null) adminController.refreshDashboard();
                 handleClose();
             } else {
                 showAlert("Error", "Failed to update item status.");
             }
         });
+    
         task.setOnFailed(e -> {
             if (task.getException() instanceof DBConnection.NoConnectionException) {
                 PasswordManager.showAlert("No Internet", "Please connect to the Internet and try again.");
@@ -268,6 +270,7 @@ public class PostItemViewController {
                 PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
             }
         });
+    
         new Thread(task) {{ setDaemon(true); }}.start();
     }
 
