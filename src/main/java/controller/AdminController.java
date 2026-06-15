@@ -97,7 +97,8 @@ public class AdminController {
     // PUBLIC REFRESH — called by child dialogs after save/edit
     // =========================================================
     public void refreshDashboard() {
-        applyFiltersAsync();
+        refreshStatsAsync(showingArchive);  // update the 3 counter labels
+        applyFiltersAsync();                // reload the grid cards
     }
 
     // =========================================================
