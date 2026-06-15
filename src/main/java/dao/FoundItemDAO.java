@@ -506,6 +506,7 @@ public class FoundItemDAO {
         String sql = """
             UPDATE found_items
             SET archived_reason = ?
+                updated_at      = NOW() AT TIME ZONE 'Asia/Manila'
             WHERE id = ?
             """;
         try (Connection conn = DBConnection.getConnection();
