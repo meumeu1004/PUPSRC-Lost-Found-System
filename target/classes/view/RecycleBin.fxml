@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="560" prefWidth="820" spacing="16" style="-fx-background-color: #FFFFFF; -fx-padding: 24;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/26" fx:controller="controller.RecyclebinController">
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #710912;" text="RECENTLY DELETED" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#handleClose" style="-fx-background-color: #710912; -fx-text-fill: white; -fx-border-radius: 5; -fx-background-radius: 5;" text="Close" />
+    </HBox>
+
+    <!-- Subtitle -->
+    <Label style="-fx-font-size: 12px; -fx-text-fill: #888888;" text="Deleted items are hidden from the UI but retained in the database." />
+
+    <Separator />
+
+    <!-- Table -->
+    <TableView fx:id="recycleBinTable" style="-fx-border-color: #E0E0E0;" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId" prefWidth="50" text="ID" />
+            <TableColumn fx:id="colType" prefWidth="70" text="Type" />
+            <TableColumn fx:id="colName" prefWidth="180" text="Item Name" />
+            <TableColumn fx:id="colCategory" prefWidth="110" text="Category" />
+            <TableColumn fx:id="colDate" prefWidth="130" text="Date Reported" />
+            <TableColumn fx:id="colStatus" prefWidth="110" text="Item Status" />
+            <TableColumn fx:id="colAction" prefWidth="100" text="Action" />
+        </columns>
+        <placeholder>
+            <Label style="-fx-text-fill: #AAAAAA; -fx-font-size: 13px;" text="No deleted items found." />
+        </placeholder>
+    </TableView>
+
+    <!-- Footer -->
+    <HBox alignment="CENTER_RIGHT">
+        <Label fx:id="countLabel" style="-fx-font-size: 12px; -fx-text-fill: #888888;" text="0 deleted items" />
+    </HBox>
+
+</VBox>

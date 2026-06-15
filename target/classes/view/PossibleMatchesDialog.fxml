@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="562.0" prefWidth="850.0" spacing="12.0" style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 5; -fx-border-radius: 5;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.PossibleMatchesController">
+    <padding><Insets bottom="20.0" left="20.0" right="20.0" top="16.0" /></padding>
+    <children>
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <Label style="-fx-font-weight: bold;" text="POSSIBLE MATCHES" textFill="#710912">
+                <font><Font size="20.0" /></font>
+            </Label>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-cursor: hand;" textFill="#710912">
+                <font><Font name="System Bold" size="18.0" /></font>
+            </Button>
+        </HBox>
+
+        <Separator />
+
+        <!-- Result count label -->
+        <Label fx:id="resultCountLabel" text="Searching..." textFill="#5b5b5b" />
+
+        <!-- Table -->
+        <TableView fx:id="matchTable" prefHeight="380.0" style="-fx-background-color: white;">
+            <columns>
+                <TableColumn fx:id="scoreCol" prefWidth="80" text="Match %" />
+                <TableColumn fx:id="idCol" prefWidth="60" text="ID" />
+                <TableColumn fx:id="nameCol" prefWidth="180" text="Item Name" />
+                <TableColumn fx:id="categoryCol" prefWidth="120" text="Category" />
+                <TableColumn fx:id="colorCol" prefWidth="100" text="Color" />
+                <TableColumn fx:id="dateCol" prefWidth="100" text="Date" />
+                <TableColumn fx:id="statusCol" prefWidth="90" text="Status" />
+                <TableColumn fx:id="actionCol" prefWidth="70" text="" />
+            </columns>
+        </TableView>
+
+        <!-- No results label (hidden by default) -->
+        <Label fx:id="noResultsLabel" managed="false" style="-fx-font-style: italic; -fx-font-size: 13px;" text="No possible matching records were found." textFill="#5b5b5b" visible="false" />
+
+        <!-- Footer -->
+        <HBox alignment="CENTER_RIGHT">
+            <Button onAction="#handleClose" style="-fx-background-color: #710912; -fx-text-fill: white; -fx-cursor: hand; -fx-padding: 6 18;" text="Close" />
+        </HBox>
+
+    </children>
+</VBox>

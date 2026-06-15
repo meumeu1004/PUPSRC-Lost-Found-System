@@ -3,20 +3,12 @@ package database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import io.github.cdimascio.dotenv.Dotenv;
 
 public class DBConnection {
 
-    private static final Dotenv dotenv = Dotenv.load();
-
-    private static final String DATABASE_URL =
-            require(dotenv.get("DB_URL"), "DB_URL is missing in .env");
-
-    private static final String DATABASE_USER =
-            require(dotenv.get("DB_USER"), "DB_USER is missing in .env");
-
-    private static final String DATABASE_PASSWORD =
-            require(dotenv.get("DB_PASSWORD"), "DB_PASSWORD is missing in .env");
+    private static final String DATABASE_URL      = "jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require";
+    private static final String DATABASE_USER     = "postgres.bjjfhgutepegvjlpmiqi";
+    private static final String DATABASE_PASSWORD = "[Y9rWxZDH1SbaebgV)!";
 
     private static String require(String value, String errorMsg) {
         if (value == null || value.isBlank()) {
