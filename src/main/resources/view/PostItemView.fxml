@@ -38,8 +38,14 @@
 
         <!-- ── Find Possible Matches — prominent row ── -->
         <HBox fx:id="findMatchesRow" managed="false" visible="false">
-            <Button fx:id="findMatchesButton" maxWidth="Infinity" onAction="#handleFindMatches" style="-fx-background-color: #1a5276; -fx-text-fill: white;                            -fx-font-weight: bold; -fx-font-size: 13px;                            -fx-background-radius: 5; -fx-cursor: hand;                            -fx-padding: 9 0;" text="🔍  Find Possible Matches" HBox.hgrow="ALWAYS" />
-            <VBox.margin><Insets bottom="12.0" /></VBox.margin>
+            <Button fx:id="findMatchesButton" onAction="#handleFindMatches"
+                    maxWidth="Infinity" HBox.hgrow="ALWAYS"
+                    text="FIND POSSIBLE MATCHES"
+                    style="-fx-background-color: #1a5276; -fx-text-fill: white;
+                           -fx-font-weight: bold; -fx-font-size: 13px;
+                           -fx-background-radius: 5; -fx-cursor: hand;
+                           -fx-padding: 9 0;"/>
+            <VBox.margin><Insets bottom="12.0"/></VBox.margin>
         </HBox>
 
         <!-- ── Scrollable Content ── -->

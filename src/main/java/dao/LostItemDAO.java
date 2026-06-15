@@ -559,6 +559,7 @@ public class LostItemDAO {
         String sql = """
             UPDATE lost_items
             SET archived_reason = ?
+                updated_at      = NOW() AT TIME ZONE 'Asia/Manila'
             WHERE id = ?
             """;
         try (Connection conn = DBConnection.getConnection();
