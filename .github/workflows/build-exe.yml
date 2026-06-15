@@ -28,7 +28,7 @@ jobs:
             --input target `
             --name LostAndFound `
             --main-jar lostandfoundsystem-1.0-SNAPSHOT.jar `
-            --main-class lostandfoundsystem.application.AdminApplication `
+            --main-class application.AdminApplication `
             --type exe `
             --app-version 1.0.0 `
             --dest target/dist `
@@ -62,7 +62,7 @@ jobs:
             --input target \
             --name LostAndFound \
             --main-jar lostandfoundsystem-1.0-SNAPSHOT.jar \
-            --main-class lostandfoundsystem.application.AdminApplication \
+            --main-class application.AdminApplication \
             --type dmg \
             --app-version 1.0.0 \
             --dest target/dist
