@@ -903,7 +903,7 @@ public class AdminController {
                 "• To maintain historical archives for audit purposes\n" +
                 "• To improve system functionality\n\n" +
                 "3. Data Storage and Security\n" +
-                "• All data is stored in a local database\n" +
+                "• All data is stored in a cloud database\n" +
                 "• Admin passwords are hashed using industry-standard algorithms (bcrypt)\n" +
                 "• Personal information is treated as sensitive data\n" +
                 "• No data is shared with third parties\n\n" +
