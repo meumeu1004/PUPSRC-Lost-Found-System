@@ -1,38 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<VBox maxWidth="-Infinity" prefWidth="660.0" spacing="0.0"
-      style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 5; -fx-border-radius: 5;"
-      xmlns="http://javafx.com/javafx/17.0.12"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="controller.PostItemViewController">
+<VBox maxWidth="-Infinity" prefHeight="602.0" prefWidth="660.0" spacing="0.0" style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 5; -fx-border-radius: 5;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.PostItemViewController">
     <padding>
-        <Insets bottom="20.0" left="25.0" right="25.0" top="20.0"/>
+        <Insets bottom="20.0" left="25.0" right="25.0" top="20.0" />
     </padding>
 
     <children>
 
         <!-- ── Header ── -->
         <HBox alignment="CENTER_LEFT" spacing="10.0">
-            <Label fx:id="titleLabel" text="ITEM DETAILS" textFill="#710912"
-                   style="-fx-font-weight: bold;">
-                <font><Font size="22.0"/></font>
+            <Label fx:id="titleLabel" style="-fx-font-weight: bold;" text="ITEM DETAILS" textFill="#710912">
+                <font><Font size="22.0" /></font>
             </Label>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button onAction="#handleClose"
-                    style="-fx-background-color: transparent; -fx-cursor: hand;"
-                    textFill="#710912">
-                <font><Font name="System Bold" size="18.0"/></font>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-cursor: hand;" textFill="#710912">
+                <font><Font name="System Bold" size="18.0" /></font>
             </Button>
         </HBox>
 
         <Separator>
-            <VBox.margin><Insets bottom="12.0" top="8.0"/></VBox.margin>
+            <VBox.margin><Insets bottom="12.0" top="8.0" /></VBox.margin>
         </Separator>
 
         <!-- ── Find Possible Matches — prominent row ── -->
@@ -48,141 +49,110 @@
         </HBox>
 
         <!-- ── Scrollable Content ── -->
-        <ScrollPane fitToWidth="true" prefHeight="430.0"
-                    style="-fx-background-color: transparent; -fx-background: transparent;"
-                    VBox.vgrow="ALWAYS">
+        <ScrollPane fitToWidth="true" prefHeight="430.0" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
             <content>
                 <VBox spacing="16.0" style="-fx-background-color: white;">
-                    <padding><Insets right="4.0"/></padding>
+                    <padding><Insets right="4.0" /></padding>
 
                     <!-- Item Information -->
                     <VBox spacing="10.0">
-                        <Label text="Item Information" textFill="#710912"
-                               style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
-                        <Separator/>
+                        <Label style="-fx-font-weight: bold; -fx-font-size: 13px;" text="Item Information" textFill="#710912" />
+                        <Separator />
 
                         <GridPane hgap="12.0" vgap="8.0">
                             <columnConstraints>
-                                <ColumnConstraints minWidth="130.0" prefWidth="140.0"/>
-                                <ColumnConstraints hgrow="ALWAYS"/>
+                                <ColumnConstraints minWidth="130.0" prefWidth="140.0" />
+                                <ColumnConstraints hgrow="ALWAYS" />
                             </columnConstraints>
 
-                            <Label text="Item Name" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                            <Label fx:id="itemNameValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px; -fx-font-weight: bold;"
-                                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Item Name" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label fx:id="itemNameValue" style="-fx-font-size: 13px; -fx-font-weight: bold;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                            <Label text="Category" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                            <Label fx:id="categoryValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Category" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <Label fx:id="categoryValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                            <Label text="Color" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                            <Label fx:id="colorValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Color" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <Label fx:id="colorValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                            <Label text="Type" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                            <Label fx:id="itemTypeValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Type" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                            <Label fx:id="itemTypeValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-                            <Label fx:id="itemDateLabel" text="Date Lost" textFill="#888888"
-                                   style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                            <Label fx:id="itemDateValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                            <Label fx:id="itemDateLabel" style="-fx-font-size: 12px;" text="Date Lost" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                            <Label fx:id="itemDateValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
-                            <Label text="Status" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                            <Label fx:id="itemStatusValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Status" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                            <Label fx:id="itemStatusValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                     <rowConstraints>
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                     </rowConstraints>
                         </GridPane>
 
                         <!-- Description -->
-                        <Label text="Description" textFill="#888888" style="-fx-font-size: 12px;"/>
-                        <Label fx:id="descriptionValue" text="—" textFill="#1a1a1a"
-                               wrapText="true" style="-fx-font-size: 13px;"/>
+                        <Label style="-fx-font-size: 12px;" text="Description" textFill="#888888" />
+                        <Label fx:id="descriptionValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" wrapText="true" />
                     </VBox>
 
                     <!-- Reporter / Finder Information -->
                     <VBox spacing="10.0">
-                        <Label fx:id="reporterSectionLabel" text="Reporter Information"
-                               textFill="#710912"
-                               style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
-                        <Separator/>
+                        <Label fx:id="reporterSectionLabel" style="-fx-font-weight: bold; -fx-font-size: 13px;" text="Reporter Information" textFill="#710912" />
+                        <Separator />
 
                         <GridPane hgap="12.0" vgap="8.0">
                             <columnConstraints>
-                                <ColumnConstraints minWidth="130.0" prefWidth="140.0"/>
-                                <ColumnConstraints hgrow="ALWAYS"/>
+                                <ColumnConstraints minWidth="130.0" prefWidth="140.0" />
+                                <ColumnConstraints hgrow="ALWAYS" />
                             </columnConstraints>
 
-                            <Label text="Name" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                            <Label fx:id="reporterNameValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Name" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label fx:id="reporterNameValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                            <Label text="Contact" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                            <Label fx:id="contactValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Contact" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <Label fx:id="contactValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                            <Label text="Email" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                            <Label fx:id="emailValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Email" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <Label fx:id="emailValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                     <rowConstraints>
+                        <RowConstraints />
+                        <RowConstraints />
+                        <RowConstraints />
+                     </rowConstraints>
                         </GridPane>
                     </VBox>
 
                     <!-- Record Info -->
                     <VBox spacing="10.0">
-                        <Label text="Record Information" textFill="#710912"
-                               style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
-                        <Separator/>
+                        <Label style="-fx-font-weight: bold; -fx-font-size: 13px;" text="Record Information" textFill="#710912" />
+                        <Separator />
 
                         <GridPane hgap="12.0" vgap="8.0">
                             <columnConstraints>
-                                <ColumnConstraints minWidth="130.0" prefWidth="140.0"/>
-                                <ColumnConstraints hgrow="ALWAYS"/>
+                                <ColumnConstraints minWidth="130.0" prefWidth="140.0" />
+                                <ColumnConstraints hgrow="ALWAYS" />
                             </columnConstraints>
 
-                            <Label text="Date Reported" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                            <Label fx:id="dateReportedValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Date Reported" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label fx:id="dateReportedValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                            <Label text="Last Updated" textFill="#888888" style="-fx-font-size: 12px;"
-                                   GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                            <Label fx:id="lastUpdatedValue" text="—" textFill="#1a1a1a"
-                                   style="-fx-font-size: 13px;"
-                                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label style="-fx-font-size: 12px;" text="Last Updated" textFill="#888888" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <Label fx:id="lastUpdatedValue" style="-fx-font-size: 13px;" text="—" textFill="#1a1a1a" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                     <rowConstraints>
+                        <RowConstraints />
+                        <RowConstraints />
+                     </rowConstraints>
                         </GridPane>
                     </VBox>
 
                     <!-- Image -->
-                    <VBox spacing="8.0" alignment="CENTER"
-                          style="-fx-border-color: #D3D3D3; -fx-border-radius: 6;
-                                 -fx-border-style: dashed; -fx-background-color: #FAFAFA;
-                                 -fx-background-radius: 6;">
-                        <padding><Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/></padding>
-                        <Label text="Item Image" textFill="#710912"
-                               style="-fx-font-weight: bold; -fx-font-size: 12px;"/>
-                        <Label fx:id="imagePlaceholderLabel" text="📷  No image provided"
-                               textFill="#aaaaaa" style="-fx-font-size: 12px; -fx-font-style: italic;"/>
-                        <ImageView fx:id="previewImageView"
-                                   fitHeight="180.0" fitWidth="320.0"
-                                   preserveRatio="true" visible="false"/>
+                    <VBox alignment="CENTER" spacing="8.0" style="-fx-border-color: #D3D3D3; -fx-border-radius: 6;                                  -fx-border-style: dashed; -fx-background-color: #FAFAFA;                                  -fx-background-radius: 6;">
+                        <padding><Insets bottom="16.0" left="16.0" right="16.0" top="16.0" /></padding>
+                        <Label style="-fx-font-weight: bold; -fx-font-size: 12px;" text="Item Image" textFill="#710912" />
+                        <Label fx:id="imagePlaceholderLabel" style="-fx-font-size: 12px; -fx-font-style: italic;" text="📷  No image provided" textFill="#aaaaaa" />
+                        <ImageView fx:id="previewImageView" fitHeight="157.0" fitWidth="430.0" preserveRatio="true" visible="false" />
                     </VBox>
 
                 </VBox>
@@ -190,43 +160,20 @@
         </ScrollPane>
 
         <Separator>
-            <VBox.margin><Insets bottom="12.0" top="12.0"/></VBox.margin>
+            <VBox.margin><Insets bottom="12.0" top="12.0" /></VBox.margin>
         </Separator>
 
         <!-- ── Bottom Action Buttons ── -->
         <HBox alignment="CENTER_RIGHT" spacing="8.0">
-            <Button fx:id="editButton" onAction="#handleEdit"
-                    style="-fx-background-color: #710912; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-font-size: 13px;
-                           -fx-background-radius: 5; -fx-cursor: hand;"
-                    text="EDIT"/>
+            <Button fx:id="editButton" onAction="#handleEdit" style="-fx-background-color: #710912; -fx-text-fill: white;                            -fx-font-weight: bold; -fx-font-size: 13px;                            -fx-background-radius: 5; -fx-cursor: hand;" text="EDIT" />
 
-            <Button fx:id="markFoundButton" managed="false" visible="false"
-                    onAction="#handleMarkAsFound"
-                    style="-fx-background-color: #153240; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-font-size: 13px;
-                           -fx-background-radius: 5; -fx-cursor: hand;"
-                    text="MARK AS FOUND"/>
+            <Button fx:id="markFoundButton" managed="false" onAction="#handleMarkAsFound" style="-fx-background-color: #153240; -fx-text-fill: white;                            -fx-font-weight: bold; -fx-font-size: 13px;                            -fx-background-radius: 5; -fx-cursor: hand;" text="MARK AS FOUND" visible="false" />
 
-            <Button fx:id="claimButton" managed="false" visible="false"
-                    onAction="#handleClaim"
-                    style="-fx-background-color: #c28d39; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-font-size: 13px;
-                           -fx-background-radius: 5; -fx-cursor: hand;"
-                    text="CLAIM"/>
+            <Button fx:id="claimButton" managed="false" onAction="#handleClaim" style="-fx-background-color: #c28d39; -fx-text-fill: white;                            -fx-font-weight: bold; -fx-font-size: 13px;                            -fx-background-radius: 5; -fx-cursor: hand;" text="CLAIM" visible="false" />
 
-            <Button fx:id="archiveButton" managed="false" visible="false"
-                    onAction="#handleArchive"
-                    style="-fx-background-color: #154230; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-font-size: 13px;
-                           -fx-background-radius: 5; -fx-cursor: hand;"
-                    text="ARCHIVE"/>
+            <Button fx:id="archiveButton" managed="false" onAction="#handleArchive" style="-fx-background-color: #154230; -fx-text-fill: white;                            -fx-font-weight: bold; -fx-font-size: 13px;                            -fx-background-radius: 5; -fx-cursor: hand;" text="ARCHIVE" visible="false" />
 
-            <Button onAction="#handleClose"
-                    style="-fx-background-color: #A5A5A5; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-font-size: 13px;
-                           -fx-background-radius: 5; -fx-cursor: hand;"
-                    text="CLOSE"/>
+            <Button onAction="#handleClose" style="-fx-background-color: #A5A5A5; -fx-text-fill: white;                            -fx-font-weight: bold; -fx-font-size: 13px;                            -fx-background-radius: 5; -fx-cursor: hand;" text="CLOSE" />
         </HBox>
 
     </children>
