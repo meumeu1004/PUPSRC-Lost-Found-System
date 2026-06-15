@@ -237,11 +237,16 @@ public class PostItemViewController {
     private void handleMarkAsFound() {
         if (existingLost == null) return;
 
-        final int id = existingLost.getId();
-        Task<Boolean> task = new Task<>() {
-            @Override protected Boolean call() throws Exception {
-                boolean ok = lostDAO.markFound(id);
-                if (ok) auditDAO.insertLog(id, "Lost", "Marked Found", "admin",
+        if (!PasswordGuard.verify(
+                markFoundButton.getScene().getWindow(),
+                "Mark as Found",
+                "Enter admin password to mark this item as found:")) return;
+
+        try {
+            boolean ok = lostDAO.markFound(existingLost.getId());
+            if (ok) {
+                auditDAO.insertLog(existingLost.getId(), "Lost",
+                        "Marked Found", "admin",
                         "{\"item_status\": \"Unresolved\"}",
                         "{\"item_status\": \"Found\"}");
                 return ok;

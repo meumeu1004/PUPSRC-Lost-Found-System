@@ -279,7 +279,8 @@ public class ClaimDAO {
                 claimant_contact_email = ?,
                 claim_date            = ?,
                 verified_by           = ?,
-                remarks               = ?
+                remarks               = ?,
+                updated_at            = NOW() AT TIME ZONE 'Asia/Manila'
             WHERE claim_id = ?
             """;
         try (Connection conn = DBConnection.getConnection();
