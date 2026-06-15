@@ -39,7 +39,7 @@
         <HBox fx:id="findMatchesRow" managed="false" visible="false">
             <Button fx:id="findMatchesButton" onAction="#handleFindMatches"
                     maxWidth="Infinity" HBox.hgrow="ALWAYS"
-                    text="🔍  Find Possible Matches"
+                    text="FIND POSSIBLE MATCHES"
                     style="-fx-background-color: #1a5276; -fx-text-fill: white;
                            -fx-font-weight: bold; -fx-font-size: 13px;
                            -fx-background-radius: 5; -fx-cursor: hand;
