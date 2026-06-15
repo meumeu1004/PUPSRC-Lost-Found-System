@@ -235,6 +235,11 @@ public class PostItemViewController {
     private void handleMarkAsFound() {
         if (existingLost == null) return;
 
+        if (!PasswordGuard.verify(
+                markFoundButton.getScene().getWindow(),
+                "Mark as Found",
+                "Enter admin password to mark this item as found:")) return;
+
         try {
             boolean ok = lostDAO.markFound(existingLost.getId());
             if (ok) {
