@@ -3,6 +3,8 @@ package controller;
 import dao.AuditLogDAO;
 import dao.FoundItemDAO;
 import dao.LostItemDAO;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -136,130 +138,119 @@ public class PostItemFormController {
     private void handleSave() {
         if (!validateFields()) return;
 
-        LocalDate pickedDate = itemDatePicker.getValue() != null
+        // Snapshot form values before going to background thread
+        final LocalDate pickedDate = itemDatePicker.getValue() != null
                 ? itemDatePicker.getValue()
                 : LocalDate.now();
+        final String itemName    = itemNameField.getText().trim();
+        final String category    = categoryPicker.getValue();
+        final String desc        = descArea.getText().trim();
+        final String color       = colorField.getText().trim();
+        final String reporter    = reporterNameField.getText().trim();
+        final String contact     = contactNumberField.getText().trim();
+        final String email       = emailField.getText().trim();
+        final String imgPath     = imagePath;
+        final String currentMode = mode;
 
-        try {
+        // Disable save button to prevent double-submit
+        saveButton.setDisable(true);
+        saveButton.setText("Saving...");
 
-            switch (mode) {
+        Task<String> saveTask = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                return switch (currentMode) {
 
-                case "new_lost" -> {
-                    LostItem item = new LostItem(
-                            0,
-                            itemNameField.getText().trim(),
-                            categoryPicker.getValue(),
-                            descArea.getText().trim(),
-                            colorField.getText().trim(),
-                            imagePath,
-                            "Active",
-                            null,
-                            null,
-                            null,
-                            null,
-                            "Unresolved",
-                            reporterNameField.getText().trim(),
-                            contactNumberField.getText().trim(),
-                            emailField.getText().trim(),
-                            pickedDate
-                    );
-                    boolean ok = lostDAO.insert(item);
-                    if (ok) auditDAO.insertLog(0, "Lost", "Created Report",
-                            "user", null,
-                            "{\"item_name\": \"" + item.getItemName() + "\"}");
-                    handleResult(ok, "Lost item report submitted.");
-                }
+                    case "new_lost" -> {
+                        LostItem item = new LostItem(
+                                0, itemName, category, desc, color, imgPath,
+                                "Active", null, null, null, null, "Unresolved",
+                                reporter, contact, email, pickedDate);
+                        boolean ok = lostDAO.insert(item);
+                        if (ok) auditDAO.insertLog(0, "Lost", "Created Report",
+                                "user", null,
+                                "{\"item_name\": \"" + item.getItemName() + "\"}");
+                        yield ok ? "Lost item report submitted." : null;
+                    }
 
-                case "new_found" -> {
-                    FoundItem item = new FoundItem(
-                            0,
-                            itemNameField.getText().trim(),
-                            categoryPicker.getValue(),
-                            descArea.getText().trim(),
-                            colorField.getText().trim(),
-                            imagePath,
-                            "Active",
-                            "Unclaimed",
-                            null,
-                            null,
-                            null,
-                            null,
-                            reporterNameField.getText().trim(),
-                            contactNumberField.getText().trim(),
-                            emailField.getText().trim(),
-                            pickedDate
-                    );
-                    boolean ok = foundDAO.insert(item);
-                    if (ok) auditDAO.insertLog(0, "Found", "Created Report",
-                            "user", null,
-                            "{\"item_name\": \"" + item.getItemName() + "\"}");
-                    handleResult(ok, "Found item report submitted.");
-                }
+                    case "new_found" -> {
+                        FoundItem item = new FoundItem(
+                                0, itemName, category, desc, color, imgPath,
+                                "Active", "Unclaimed", null, null, null, null,
+                                reporter, contact, email, pickedDate);
+                        boolean ok = foundDAO.insert(item);
+                        if (ok) auditDAO.insertLog(0, "Found", "Created Report",
+                                "user", null,
+                                "{\"item_name\": \"" + item.getItemName() + "\"}");
+                        yield ok ? "Found item report submitted." : null;
+                    }
 
-                case "edit_lost" -> {
-                    LostItem updated = new LostItem(
-                            existingLost.getId(),
-                            itemNameField.getText().trim(),
-                            categoryPicker.getValue(),
-                            descArea.getText().trim(),
-                            colorField.getText().trim(),
-                            imagePath != null ? imagePath : existingLost.getImagePath(),
-                            existingLost.getRecordStatus(),
-                            existingLost.getCreatedAt(),
-                            existingLost.getUpdatedAt(),
-                            existingLost.getArchivedReason(),
-                            existingLost.getArchivedAt(),
-                            existingLost.getItemStatus(),
-                            reporterNameField.getText().trim(),
-                            contactNumberField.getText().trim(),
-                            emailField.getText().trim(),
-                            pickedDate
-                    );
-                    boolean ok = lostDAO.update(updated);
-                    if (ok) auditDAO.insertLog(updated.getId(), "Lost",
-                            "Updated Item Details", "admin",
-                            buildLostJson(existingLost),
-                            buildLostJson(updated));
-                    handleResult(ok, "Lost item updated.");
-                }
+                    case "edit_lost" -> {
+                        LostItem updated = new LostItem(
+                                existingLost.getId(), itemName, category, desc, color,
+                                imgPath != null ? imgPath : existingLost.getImagePath(),
+                                existingLost.getRecordStatus(),
+                                existingLost.getCreatedAt(), existingLost.getUpdatedAt(),
+                                existingLost.getArchivedReason(), existingLost.getArchivedAt(),
+                                existingLost.getItemStatus(), reporter, contact, email, pickedDate);
+                        boolean ok = lostDAO.update(updated);
+                        if (ok) auditDAO.insertLog(updated.getId(), "Lost",
+                                "Updated Item Details", "admin",
+                                buildLostJson(existingLost), buildLostJson(updated));
+                        yield ok ? "Lost item updated." : null;
+                    }
 
-                case "edit_found" -> {
-                    FoundItem updated = new FoundItem(
-                            existingFound.getId(),
-                            itemNameField.getText().trim(),
-                            categoryPicker.getValue(),
-                            descArea.getText().trim(),
-                            colorField.getText().trim(),
-                            imagePath != null ? imagePath : existingFound.getImagePath(),
-                            existingFound.getRecordStatus(),
-                            existingFound.getItemStatus(),
-                            existingFound.getCreatedAt(),
-                            existingFound.getUpdatedAt(),
-                            existingFound.getArchivedReason(),
-                            existingFound.getArchivedAt(),
-                            reporterNameField.getText().trim(),
-                            contactNumberField.getText().trim(),
-                            emailField.getText().trim(),
-                            pickedDate
-                    );
-                    boolean ok = foundDAO.update(updated);
-                    if (ok) auditDAO.insertLog(updated.getId(), "Found",
-                            "Updated Item Details", "admin",
-                            buildFoundJson(existingFound),
-                            buildFoundJson(updated));
-                    handleResult(ok, "Found item updated.");
-                }
+                    case "edit_found" -> {
+                        FoundItem updated = new FoundItem(
+                                existingFound.getId(), itemName, category, desc, color,
+                                imgPath != null ? imgPath : existingFound.getImagePath(),
+                                existingFound.getRecordStatus(), existingFound.getItemStatus(),
+                                existingFound.getCreatedAt(), existingFound.getUpdatedAt(),
+                                existingFound.getArchivedReason(), existingFound.getArchivedAt(),
+                                reporter, contact, email, pickedDate);
+                        boolean ok = foundDAO.update(updated);
+                        if (ok) auditDAO.insertLog(updated.getId(), "Found",
+                                "Updated Item Details", "admin",
+                                buildFoundJson(existingFound), buildFoundJson(updated));
+                        yield ok ? "Found item updated." : null;
+                    }
+
+                    default -> null;
+                };
             }
+        };
 
-        } catch (DBConnection.NoConnectionException e) {
-            PasswordManager.showAlert("No Internet",
-                    "Please connect to the Internet and try again.");
+        saveTask.setOnSucceeded(e -> {
+            String successMsg = saveTask.getValue();
+            if (successMsg != null) {
+                showAlert("Success", successMsg);
+                // Refresh dashboard without blocking — dialog is still open briefly
+                if (adminController != null) adminController.refreshDashboard();
+                handleClose();
+            } else {
+                saveButton.setDisable(false);
+                saveButton.setText("SUBMIT REPORT");
+                showAlert("Error", "Database operation failed. Please try again.");
+            }
+        });
 
-        } catch (Exception e) {
-            PasswordManager.showAlert("Error",
-                    "Something went wrong. Please try again.");
-            e.printStackTrace();
-        }
+        saveTask.setOnFailed(e -> {
+            saveButton.setDisable(false);
+            saveButton.setText("SUBMIT REPORT");
+            Throwable ex = saveTask.getException();
+            if (ex instanceof DBConnection.NoConnectionException) {
+                PasswordManager.showAlert("No Internet",
+                        "Please connect to the Internet and try again.");
+            } else {
+                ex.printStackTrace();
+                PasswordManager.showAlert("Error",
+                        "Something went wrong. Please try again.");
+            }
+        });
+
+        Thread t = new Thread(saveTask);
+        t.setDaemon(true);
+        t.start();
     }
 
     // =========================================================
@@ -389,16 +380,6 @@ public class PostItemFormController {
             return false;
         }
         return true;
-    }
-
-    private void handleResult(boolean ok, String successMessage) {
-        if (ok) {
-            showAlert("Success", successMessage);
-            if (adminController != null) adminController.refreshDashboard();
-            handleClose();
-        } else {
-            showAlert("Error", "Database operation failed. Please try again.");
-        }
     }
 
     private void showAlert(String title, String message) {

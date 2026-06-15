@@ -3,6 +3,8 @@ package controller;
 import dao.AuditLogDAO;
 import dao.FoundItemDAO;
 import dao.LostItemDAO;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -235,25 +237,33 @@ public class PostItemViewController {
     private void handleMarkAsFound() {
         if (existingLost == null) return;
 
-        try {
-            boolean ok = lostDAO.markFound(existingLost.getId());
-            if (ok) {
-                auditDAO.insertLog(existingLost.getId(), "Lost",
-                        "Marked Found", "admin",
+        final int id = existingLost.getId();
+        Task<Boolean> task = new Task<>() {
+            @Override protected Boolean call() throws Exception {
+                boolean ok = lostDAO.markFound(id);
+                if (ok) auditDAO.insertLog(id, "Lost", "Marked Found", "admin",
                         "{\"item_status\": \"Unresolved\"}",
                         "{\"item_status\": \"Found\"}");
+                return ok;
+            }
+        };
+        task.setOnSucceeded(e -> {
+            if (task.getValue()) {
                 if (adminController != null) adminController.refreshDashboard();
                 handleClose();
             } else {
                 showAlert("Error", "Failed to update item status.");
             }
-        } catch (DBConnection.NoConnectionException e) {
-            PasswordManager.showAlert("No Internet",
-                    "Please connect to the Internet and try again.");
-        } catch (Exception e) {
-            PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
-            e.printStackTrace();
-        }
+        });
+        task.setOnFailed(e -> {
+            if (task.getException() instanceof DBConnection.NoConnectionException) {
+                PasswordManager.showAlert("No Internet", "Please connect to the Internet and try again.");
+            } else {
+                task.getException().printStackTrace();
+                PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
+            }
+        });
+        new Thread(task) {{ setDaemon(true); }}.start();
     }
 
     // =========================================================
@@ -309,30 +319,38 @@ public class PostItemViewController {
             String reason = ctrl.getSelectedReason();
             if (reason == null) return;
 
-            try {
-                if (existingLost != null) {
-                    lostDAO.archive(existingLost.getId(), reason);
-                    auditDAO.insertLog(existingLost.getId(), "Lost",
-                            "Archived", "admin",
-                            "{\"record_status\": \"Active\"}",
-                            "{\"record_status\": \"Archived\", \"reason\": \"" + reason + "\"}");
-                } else if (existingFound != null) {
-                    foundDAO.archive(existingFound.getId(), reason);
-                    auditDAO.insertLog(existingFound.getId(), "Found",
-                            "Archived", "admin",
-                            "{\"record_status\": \"Active\"}",
-                            "{\"record_status\": \"Archived\", \"reason\": \"" + reason + "\"}");
+            final String finalReason = reason;
+            Task<Void> archiveTask = new Task<>() {
+                @Override protected Void call() throws Exception {
+                    if (existingLost != null) {
+                        lostDAO.archive(existingLost.getId(), finalReason);
+                        auditDAO.insertLog(existingLost.getId(), "Lost",
+                                "Archived", "admin",
+                                "{\"record_status\": \"Active\"}",
+                                "{\"record_status\": \"Archived\", \"reason\": \"" + finalReason + "\"}");
+                    } else if (existingFound != null) {
+                        foundDAO.archive(existingFound.getId(), finalReason);
+                        auditDAO.insertLog(existingFound.getId(), "Found",
+                                "Archived", "admin",
+                                "{\"record_status\": \"Active\"}",
+                                "{\"record_status\": \"Archived\", \"reason\": \"" + finalReason + "\"}");
+                    }
+                    return null;
                 }
+            };
+            archiveTask.setOnSucceeded(ev -> {
                 if (adminController != null) adminController.refreshDashboard();
                 handleClose();
-
-            } catch (DBConnection.NoConnectionException e) {
-                PasswordManager.showAlert("No Internet",
-                        "Please connect to the Internet and try again.");
-            } catch (Exception e) {
-                PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
-                e.printStackTrace();
-            }
+            });
+            archiveTask.setOnFailed(ev -> {
+                if (archiveTask.getException() instanceof DBConnection.NoConnectionException) {
+                    PasswordManager.showAlert("No Internet", "Please connect to the Internet and try again.");
+                } else {
+                    archiveTask.getException().printStackTrace();
+                    PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
+                }
+            });
+            new Thread(archiveTask) {{ setDaemon(true); }}.start();
 
         } catch (IOException e) {
             e.printStackTrace();
