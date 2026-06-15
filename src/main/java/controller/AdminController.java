@@ -2,6 +2,8 @@ package controller;
 
 import dao.FoundItemDAO;
 import dao.LostItemDAO;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -69,7 +71,6 @@ public class AdminController {
     private Image categoryImg;
     private Image typeImg;
 
-
     // ── DAOs ─────────────────────────────────────────────────
     private final LostItemDAO  lostDAO  = new LostItemDAO();
     private final FoundItemDAO foundDAO = new FoundItemDAO();
@@ -79,47 +80,30 @@ public class AdminController {
     private int currentPage = 0;
 
     // All items currently loaded (after filter/search applied)
-    private List<Object> allItems = new ArrayList<>();  // holds LostItem or FoundItem
+    private List<Object> allItems = new ArrayList<>();
 
     // ── View mode ────────────────────────────────────────────
     private boolean showingArchive = false;
-
-    // ── Recycle Bin / Soft Deleted View ───────────────────────────────
     private boolean showingDeleted = false;
+
+    // ── Loading guard — prevents concurrent DB tasks ──────────
+    private volatile boolean isLoading = false;
 
     // Date formatter
     private static final DateTimeFormatter UI_DATE =
             DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
     // =========================================================
-    // INITIALIZE
+    // PUBLIC REFRESH — called by child dialogs after save/edit
     // =========================================================
     public void refreshDashboard() {
-        refreshStats();
-        applyFilters();
+        refreshStatsAsync(showingArchive);  // update the 3 counter labels
+        applyFiltersAsync();                // reload the grid cards
     }
 
-    private void refreshStats() {
-        try {
-            if (showingArchive) {
-                totalLostLabel.setText(String.valueOf(lostDAO.getAllArchived().size()));
-                totalFoundLabel.setText(String.valueOf(foundDAO.getAllArchived().size()));
-                totalUnresolvedLabel.setText(String.valueOf(
-                        lostDAO.getAllArchived().size() + foundDAO.getAllArchived().size()));
-            } else {
-                totalLostLabel.setText(String.valueOf(lostDAO.countActive()));
-                totalFoundLabel.setText(String.valueOf(foundDAO.countActive()));
-                totalUnresolvedLabel.setText(String.valueOf(
-                        lostDAO.countActive() + foundDAO.countActive()));
-            }
-        } catch (DBConnection.NoConnectionException e) {
-            PasswordManager.showAlert("No Internet",
-                    "Please connect to the Internet and try again.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+    // =========================================================
+    // INITIALIZE
+    // =========================================================
     @FXML
     public void initialize() {
 
@@ -140,6 +124,7 @@ public class AdminController {
         typeCombo.setStyle("-fx-padding: 0; -fx-background-radius: 8;");
         typeCombo.setPadding(new Insets(0));
         typeCombo.setPrefWidth(130);
+
         // Load combo icons
         sortImg     = new Image(Objects.requireNonNull(
                 AdminController.class.getResourceAsStream("/media/sortingarrow.png")));
@@ -201,13 +186,13 @@ public class AdminController {
                 }
             }
         });
-        typeCombo.setOnAction(e -> applyFilters());
 
-        sortCombo.setOnAction(e -> applyFilters());
-        categoryCombo.setOnAction(e -> applyFilters());
-        typeCombo.setOnAction(e -> applyFilters());
+        sortCombo.setOnAction(e -> applyFiltersAsync());
+        categoryCombo.setOnAction(e -> applyFiltersAsync());
+        typeCombo.setOnAction(e -> applyFiltersAsync());
 
-        loadDashboard();
+        // Initial load
+        loadDashboardAsync();
 
         aboutUsLink.setOnMouseClicked(e -> showInfoDialog("About Us", getAboutUsContent()));
         termsLink.setOnMouseClicked(e -> showInfoDialog("Terms of Service", getTermsContent()));
@@ -215,137 +200,174 @@ public class AdminController {
     }
 
     // =========================================================
-    // LOAD — pulls from DB and refreshes grid
+    // ASYNC LOAD — initial dashboard load with stats
     // =========================================================
-    private void loadDashboard() {
-        try {
-            totalLostLabel.setText(String.valueOf(lostDAO.countActive()));
-            totalFoundLabel.setText(String.valueOf(foundDAO.countActive()));
-            totalUnresolvedLabel.setText(String.valueOf(
-                    lostDAO.countActive() + foundDAO.countActive()));
+    private void loadDashboardAsync() {
+        if (isLoading) return;
+        isLoading = true;
+        setGridBusy(true);
 
-            applyFilters();
+        Task<long[]> statsTask = new Task<>() {
+            @Override
+            protected long[] call() throws Exception {
+                long lost    = lostDAO.countActive();
+                long found   = foundDAO.countActive();
+                return new long[]{ lost, found, lost + found };
+            }
+        };
 
-        } catch (DBConnection.NoConnectionException e) {
-            PasswordManager.showAlert("No Internet",
-                    "Please connect to the Internet and try again.");
-        } catch (Exception e) {
-            PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
-            e.printStackTrace();
-        }
+        statsTask.setOnSucceeded(e -> {
+            long[] counts = statsTask.getValue();
+            totalLostLabel.setText(String.valueOf(counts[0]));
+            totalFoundLabel.setText(String.valueOf(counts[1]));
+            totalUnresolvedLabel.setText(String.valueOf(counts[2]));
+            isLoading = false;
+            applyFiltersAsync();   // chain: load items after stats
+        });
+
+        statsTask.setOnFailed(e -> {
+            isLoading = false;
+            setGridBusy(false);
+            Throwable ex = statsTask.getException();
+            if (ex instanceof DBConnection.NoConnectionException) {
+                PasswordManager.showAlert("No Internet",
+                        "Please connect to the Internet and try again.");
+            } else {
+                ex.printStackTrace();
+            }
+        });
+
+        Thread t = new Thread(statsTask);
+        t.setDaemon(true);
+        t.start();
     }
 
-    private void applyFilters() {
-        String category   = categoryCombo.getValue();
-        String type       = typeCombo.getValue();
-        String sortRaw    = sortCombo.getValue();
-        String keywordRaw = searchField.getText();
-        String keyword    = (keywordRaw == null || keywordRaw.isBlank())
-                ? null : keywordRaw.trim();
+    // =========================================================
+    // ASYNC FILTER + RENDER — the hot path
+    // =========================================================
+    private void applyFiltersAsync() {
+        // Capture UI-thread values before jumping to background
+        final String category   = categoryCombo.getValue();
+        final String type       = typeCombo.getValue();
+        final String sortRaw    = sortCombo.getValue();
+        final String keywordRaw = searchField.getText();
+        final boolean archive   = showingArchive;
 
-        String cat  = (category == null || category.equals("All Category")) ? null : category;
-        String sort = switch (sortRaw == null ? "Newest" : sortRaw) {
+        final String keyword = (keywordRaw == null || keywordRaw.isBlank())
+                ? null : keywordRaw.trim();
+        final String cat  = (category == null || category.equals("All Category")) ? null : category;
+        final String sort = switch (sortRaw == null ? "Newest" : sortRaw) {
             case "Oldest"   -> "oldest";
             case "Name A-Z" -> "name_asc";
             case "Name Z-A" -> "name_desc";
             default         -> "newest";
         };
 
-        allItems = new ArrayList<>();
+        setGridBusy(true);
 
-        if (!showingArchive) {
-            // ── Dashboard: simple Lost / Found / All ─────────────
-            if ("Lost".equals(type)) {
-                allItems.addAll(lostDAO.filter(keyword, cat, null, sort));
-            } else if ("Found".equals(type)) {
-                allItems.addAll(foundDAO.filter(keyword, cat, null, sort));
-            } else {
-                allItems.addAll(lostDAO.filter(keyword, cat, null, sort));
-                allItems.addAll(foundDAO.filter(keyword, cat, null, sort));
-                if ("name_asc".equals(sort) || "name_desc".equals(sort)) {
-                    allItems.sort((a, b) -> {
-                        String nameA = (a instanceof LostItem l) ? l.getItemName().toLowerCase() :
-                                ((FoundItem) a).getItemName().toLowerCase();
-                        String nameB = (b instanceof LostItem l) ? l.getItemName().toLowerCase() :
-                                ((FoundItem) b).getItemName().toLowerCase();
-                        return "name_desc".equals(sort) ? nameB.compareTo(nameA) : nameA.compareTo(nameB);
-                    });
-                } else {
-                    // newest / oldest: re-sort the combined list by createdAt so newest is always first
-                    allItems.sort((a, b) -> {
-                        java.time.LocalDateTime ca = (a instanceof LostItem l) ? l.getCreatedAt() : ((FoundItem) a).getCreatedAt();
-                        java.time.LocalDateTime cb = (b instanceof LostItem l) ? l.getCreatedAt() : ((FoundItem) b).getCreatedAt();
-                        if (ca == null && cb == null) return 0;
-                        if (ca == null) return 1;
-                        if (cb == null) return -1;
-                        return "oldest".equals(sort) ? ca.compareTo(cb) : cb.compareTo(ca);
-                    });
-                }
-            }
-        } else {
-            // ── Archive: granular status options ──────────────────
-            switch (type == null ? "All Types" : type) {
+        Task<List<Object>> filterTask = new Task<>() {
+            @Override
+            protected List<Object> call() throws Exception {
+                List<Object> items = new ArrayList<>();
 
-                case "All Lost" ->
-                        allItems.addAll(lostDAO.filterArchived(keyword, cat, null, sort));
-
-                case "All Found" ->
-                        allItems.addAll(foundDAO.filterArchived(keyword, cat, null, sort));
-
-                case "Resolved Lost" ->
-                        allItems.addAll(lostDAO.filterArchived(keyword, cat, "Found", sort));
-
-                case "Unresolved Lost" ->
-                        allItems.addAll(lostDAO.filterArchived(keyword, cat, "Unresolved", sort));
-
-                case "Claimed Found" ->
-                        allItems.addAll(foundDAO.filterArchived(keyword, cat, "Claimed", sort));
-
-                case "Unclaimed Found" ->
-                        allItems.addAll(foundDAO.filterArchived(keyword, cat, "Unclaimed", sort));
-
-                default -> {
-                    // "All Types" — show everything archived
-                    allItems.addAll(lostDAO.filterArchived(keyword, cat, null, sort));
-                    allItems.addAll(foundDAO.filterArchived(keyword, cat, null, sort));
-                    if ("name_asc".equals(sort) || "name_desc".equals(sort)) {
-                        allItems.sort((a, b) -> {
-                            String nameA = (a instanceof LostItem l) ? l.getItemName().toLowerCase() :
-                                    ((FoundItem) a).getItemName().toLowerCase();
-                            String nameB = (b instanceof LostItem l) ? l.getItemName().toLowerCase() :
-                                    ((FoundItem) b).getItemName().toLowerCase();
-                            return "name_desc".equals(sort) ? nameB.compareTo(nameA) : nameA.compareTo(nameB);
-                        });
+                if (!archive) {
+                    // ── Dashboard ─────────────────────────────────
+                    if ("Lost".equals(type)) {
+                        items.addAll(lostDAO.filter(keyword, cat, null, sort));
+                    } else if ("Found".equals(type)) {
+                        items.addAll(foundDAO.filter(keyword, cat, null, sort));
                     } else {
-                        // newest / oldest: re-sort combined list by archivedAt
-                        allItems.sort((a, b) -> {
-                            java.time.LocalDateTime aa = (a instanceof LostItem l) ? l.getArchivedAt() : ((FoundItem) a).getArchivedAt();
-                            java.time.LocalDateTime ab = (b instanceof LostItem l) ? l.getArchivedAt() : ((FoundItem) b).getArchivedAt();
-                            if (aa == null && ab == null) return 0;
-                            if (aa == null) return 1;
-                            if (ab == null) return -1;
-                            return "oldest".equals(sort) ? aa.compareTo(ab) : ab.compareTo(aa);
-                        });
+                        items.addAll(lostDAO.filter(keyword, cat, null, sort));
+                        items.addAll(foundDAO.filter(keyword, cat, null, sort));
+                        sortCombined(items, sort);
+                    }
+                } else {
+                    // ── Archive ───────────────────────────────────
+                    switch (type == null ? "All Types" : type) {
+                        case "All Lost"       -> items.addAll(lostDAO.filterArchived(keyword, cat, null, sort));
+                        case "All Found"      -> items.addAll(foundDAO.filterArchived(keyword, cat, null, sort));
+                        case "Resolved Lost"  -> items.addAll(lostDAO.filterArchived(keyword, cat, "Found", sort));
+                        case "Unresolved Lost"-> items.addAll(lostDAO.filterArchived(keyword, cat, "Unresolved", sort));
+                        case "Claimed Found"  -> items.addAll(foundDAO.filterArchived(keyword, cat, "Claimed", sort));
+                        case "Unclaimed Found"-> items.addAll(foundDAO.filterArchived(keyword, cat, "Unclaimed", sort));
+                        default -> {
+                            items.addAll(lostDAO.filterArchived(keyword, cat, null, sort));
+                            items.addAll(foundDAO.filterArchived(keyword, cat, null, sort));
+                            sortCombinedArchive(items, sort);
+                        }
                     }
                 }
+                return items;
             }
-        }
+        };
 
-        currentPage = 0;
-        renderPage();
+        filterTask.setOnSucceeded(e -> {
+            allItems = filterTask.getValue();
+            currentPage = 0;
+            renderPage();        // still on FX thread, but no DB calls here
+            setGridBusy(false);
+        });
+
+        filterTask.setOnFailed(e -> {
+            setGridBusy(false);
+            Throwable ex = filterTask.getException();
+            if (ex instanceof DBConnection.NoConnectionException) {
+                PasswordManager.showAlert("No Internet",
+                        "Please connect to the Internet and try again.");
+            } else {
+                ex.printStackTrace();
+                PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
+            }
+        });
+
+        Thread t = new Thread(filterTask);
+        t.setDaemon(true);
+        t.start();
     }
 
+    // =========================================================
+    // ASYNC STATS ONLY — used after archive toggle
+    // =========================================================
+    private void refreshStatsAsync(boolean archive) {
+        Task<long[]> task = new Task<>() {
+            @Override
+            protected long[] call() throws Exception {
+                if (archive) {
+                    long lost  = lostDAO.getAllArchived().size();
+                    long found = foundDAO.getAllArchived().size();
+                    return new long[]{ lost, found, lost + found };
+                } else {
+                    long lost  = lostDAO.countActive();
+                    long found = foundDAO.countActive();
+                    return new long[]{ lost, found, lost + found };
+                }
+            }
+        };
+        task.setOnSucceeded(e -> {
+            long[] c = task.getValue();
+            totalLostLabel.setText(String.valueOf(c[0]));
+            totalFoundLabel.setText(String.valueOf(c[1]));
+            totalUnresolvedLabel.setText(String.valueOf(c[2]));
+        });
+        task.setOnFailed(e -> task.getException().printStackTrace());
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
+    }
+
+    // =========================================================
+    // RENDER PAGE — pure UI, no DB calls, fast
+    // =========================================================
     private void renderPage() {
 
         itemGrid.getChildren().clear();
 
-        // Empty state
         if (allItems.isEmpty()) {
             Label noResults = new Label("No results found.");
             noResults.setStyle(
                     "-fx-font-size: 16px; " +
-                            "-fx-text-fill: #710912; " +
-                            "-fx-padding: 40;"
+                    "-fx-text-fill: #710912; " +
+                    "-fx-padding: 40;"
             );
             itemGrid.add(noResults, 0, 0, 4, 1);
             pageLabel.setText("Page 0 of 0");
@@ -370,13 +392,10 @@ public class AdminController {
                 Parent card;
 
                 if (showingArchive) {
-                    // ── Archive card ──────────────────────────────
                     FXMLLoader loader = new FXMLLoader(
                             getClass().getResource("/view/ArchiveItemCard.fxml"));
                     card = loader.load();
-
                     ArchiveItemCardController cardCtrl = loader.getController();
-
                     if (item instanceof LostItem lost) {
                         cardCtrl.setLostItem(lost);
                         card.setOnMouseClicked(e -> openItemDialog(lost));
@@ -384,22 +403,17 @@ public class AdminController {
                         cardCtrl.setFoundItem(found);
                         card.setOnMouseClicked(e -> openItemDialog(found));
                     }
-
                 } else {
-                    // ── Dashboard card ────────────────────────────
                     FXMLLoader loader = new FXMLLoader(
                             getClass().getResource("/view/AdminItemCard.fxml"));
                     card = loader.load();
-
                     AdminItemCardController cardCtrl = loader.getController();
-
                     if (item instanceof LostItem lost) {
                         String date = lost.getDateLost() != null
                                 ? lost.getDateLost().format(UI_DATE) : "";
                         cardCtrl.setItem(lost.getItemName(), date,
                                 lost.getImagePath(), lost.getItemStatus(), "Lost", lost.getCategory());
                         card.setOnMouseClicked(e -> openItemDialog(lost));
-
                     } else if (item instanceof FoundItem found) {
                         String date = found.getDateFound() != null
                                 ? found.getDateFound().format(UI_DATE) : "";
@@ -422,8 +436,17 @@ public class AdminController {
         prevPageBtn.setDisable(currentPage == 0);
         nextPageBtn.setDisable(currentPage >= totalPages - 1);
     }
+
+    // ── Show a loading indicator while the grid is fetching data ──
+    private void setGridBusy(boolean busy) {
+        itemGrid.setOpacity(busy ? 0.4 : 1.0);
+        itemGrid.setMouseTransparent(busy);
+        prevPageBtn.setDisable(busy);
+        nextPageBtn.setDisable(busy);
+    }
+
     // =========================================================
-    // Pagination button handlers
+    // Pagination
     // =========================================================
     @FXML
     private void handlePrevPage() {
@@ -447,7 +470,7 @@ public class AdminController {
     // =========================================================
     @FXML
     private void handleSearch() {
-        applyFilters();
+        applyFiltersAsync();
     }
 
     // =========================================================
@@ -464,13 +487,11 @@ public class AdminController {
     }
 
     // =========================================================
-    // ARCHIVED VIEW — password required to enter
+    // ARCHIVE VIEW — password guard, then async load
     // =========================================================
-
     @FXML
     private void handleArchive() {
 
-        // ── GUARD: only ask password when entering archive ────────
         if (!showingArchive) {
             if (!PasswordGuard.verify(
                     dashboardTitleLabel.getScene().getWindow(),
@@ -481,46 +502,18 @@ public class AdminController {
         showingArchive = !showingArchive;
 
         if (showingArchive) {
-            // ── Entering archive view ─────────────────────────────
+            // ── Entering archive view ──────────────────────────
             dashboardTitleLabel.setText("Archived Items");
             totalLostLabelText.setText("ARCHIVE LOST RECORDS");
             totalFoundLabelText.setText("ARCHIVE FOUND RECORDS");
-
-            // ADD THIS LINE - change the right card label to "TOTAL ARCHIVE ITEMS"
             totalPendingTextLabel.setText("TOTAL ARCHIVE ITEMS");
 
-            totalUnresolvedLabel.setText(String.valueOf(
-                    lostDAO.getAllArchived().size() + foundDAO.getAllArchived().size()
-            ));
-
-            try {
-                totalLostLabel.setText(String.valueOf(lostDAO.getAllArchived().size()));
-                totalFoundLabel.setText(String.valueOf(foundDAO.getAllArchived().size()));
-
-                // ADD THIS LINE - set total count for archive
-                totalUnresolvedLabel.setText(String.valueOf(
-                        lostDAO.getAllArchived().size() + foundDAO.getAllArchived().size()));
-
-            } catch (DBConnection.NoConnectionException e) {
-                // reset and bail out
-                showingArchive = false;
-                dashboardTitleLabel.setText("Welcome to the Dashboard!");
-                totalLostLabelText.setText("TOTAL LOST ITEMS");
-                totalFoundLabelText.setText("TOTAL FOUND ITEMS");
-                restoreDashboardButtons();
-                PasswordManager.showAlert("No Internet",
-                        "Please connect to the Internet and try again.");
-                return;
-            }
-
-            // Swap buttons
             normalPostLost.setVisible(false);   normalPostLost.setManaged(false);
             normalPostFound.setVisible(false);  normalPostFound.setManaged(false);
             normalArchive.setVisible(false);    normalArchive.setManaged(false);
             archiveBackToMain.setVisible(true); archiveBackToMain.setManaged(true);
             archiveRecentlyDeleted.setVisible(true); archiveRecentlyDeleted.setManaged(true);
 
-            // Swap typeCombo to archive options
             typeCombo.getItems().clear();
             typeCombo.getItems().addAll(
                     "All Types",
@@ -533,68 +526,28 @@ public class AdminController {
             typeCombo.getStyleClass().remove("type-combo");
 
         } else {
-            // ── Returning to dashboard ────────────────────────────
+            // ── Returning to dashboard ─────────────────────────
             dashboardTitleLabel.setText("Welcome to the Dashboard!");
             totalLostLabelText.setText("TOTAL LOST ITEMS");
             totalFoundLabelText.setText("TOTAL FOUND ITEMS");
-
-            // ADD THIS LINE - change back to "TOTAL PENDING ITEMS"
             totalPendingTextLabel.setText("TOTAL PENDING ITEMS");
 
             restoreDashboardButtons();
 
-            // Restore typeCombo to dashboard options
             typeCombo.getItems().clear();
             typeCombo.getItems().addAll("All Types", "Lost", "Found");
             typeCombo.setValue("All Types");
-
-            // ADD THIS: Apply compact style for main dashboard
             typeCombo.setStyle("-fx-padding: 0; -fx-background-radius: 8;");
             typeCombo.setPadding(new Insets(0));
             typeCombo.setPrefWidth(130);
             typeCombo.getStyleClass().add("type-combo");
-
-            loadDashboard();
-
-            // Force refresh of style after loading
-            javafx.application.Platform.runLater(() -> {
-                typeCombo.setStyle("-fx-padding: 0; -fx-background-radius: 8;");
-                typeCombo.setPadding(new javafx.geometry.Insets(0));
-                typeCombo.setPrefWidth(130);
-            });
-
-            return; // loadDashboard() calls applyFilters() internally
         }
 
-        // Apply filters (archive side only reaches here)
-        try {
-            applyFilters();
-        } catch (DBConnection.NoConnectionException e) {
-            showingArchive = false;
-            dashboardTitleLabel.setText("Welcome to the Dashboard!");
-            totalLostLabelText.setText("TOTAL LOST ITEMS");
-            totalFoundLabelText.setText("TOTAL FOUND ITEMS");
-            typeCombo.getItems().clear();
-            typeCombo.getItems().addAll("All Types", "Lost", "Found");
-            typeCombo.setValue("All Types");
-            restoreDashboardButtons();
-            PasswordManager.showAlert("No Internet",
-                    "Please connect to the Internet and try again.");
-        } catch (Exception e) {
-            showingArchive = false;
-            dashboardTitleLabel.setText("Welcome to the Dashboard!");
-            totalLostLabelText.setText("TOTAL LOST ITEMS");
-            totalFoundLabelText.setText("TOTAL FOUND ITEMS");
-            typeCombo.getItems().clear();
-            typeCombo.getItems().addAll("All Types", "Lost", "Found");
-            typeCombo.setValue("All Types");
-            restoreDashboardButtons();
-            PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
-            e.printStackTrace();
-        }
+        // Kick off async stats + items for whichever view we just entered
+        refreshStatsAsync(showingArchive);
+        applyFiltersAsync();
     }
 
-    // ── Helper to avoid repeating button visibility resets ────────
     private void restoreDashboardButtons() {
         normalPostLost.setVisible(true);    normalPostLost.setManaged(true);
         normalPostFound.setVisible(true);   normalPostFound.setManaged(true);
@@ -612,95 +565,121 @@ public class AdminController {
 
     @FXML
     private void handleRecentlyDeleted() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/RecycleBin.fxml"));
-            Parent root = loader.load();
-
-            RecyclebinController ctrl = loader.getController();
-            ctrl.load(lostDAO.getDeleted(), foundDAO.getDeleted());
-
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Recently Deleted");
-            stage.setScene(new Scene(root));
-            stage.setWidth(820);
-            stage.setHeight(560);
-            stage.setResizable(false);
-            stage.showAndWait();
-            if (showingArchive) {
-                refreshStats();
-                applyFilters();
-            } else {
-                loadDashboard();
+        // Load recycle bin data async, then open dialog
+        setGridBusy(true);
+        Task<Object[]> task = new Task<>() {
+            @Override
+            protected Object[] call() throws Exception {
+                return new Object[]{ lostDAO.getDeleted(), foundDAO.getDeleted() };
             }
+        };
+        task.setOnSucceeded(e -> {
+            setGridBusy(false);
+            try {
+                @SuppressWarnings("unchecked")
+                java.util.List<LostItem>  deleted_l = (java.util.List<LostItem>)  task.getValue()[0];
+                @SuppressWarnings("unchecked")
+                java.util.List<FoundItem> deleted_f = (java.util.List<FoundItem>) task.getValue()[1];
 
-        } catch (DBConnection.NoConnectionException e) {
-            PasswordManager.showAlert("No Internet",
-                    "Cannot load Recycle Bin. Please check your connection.");
-        } catch (IOException e) {
-            e.printStackTrace();
-            PasswordManager.showAlert("Error", "Failed to open Recycle Bin.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            PasswordManager.showAlert("Error", "Something went wrong.");
-        }
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/view/RecycleBin.fxml"));
+                Parent root = loader.load();
+                RecyclebinController ctrl = loader.getController();
+                ctrl.load(deleted_l, deleted_f);
+
+                Stage stage = new Stage();
+                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.setTitle("Recently Deleted");
+                stage.setScene(new Scene(root));
+                stage.setWidth(820);
+                stage.setHeight(560);
+                stage.setResizable(false);
+                stage.showAndWait();
+
+                // Refresh after dialog closes
+                refreshStatsAsync(showingArchive);
+                applyFiltersAsync();
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                PasswordManager.showAlert("Error", "Failed to open Recycle Bin.");
+            }
+        });
+        task.setOnFailed(e -> {
+            setGridBusy(false);
+            if (task.getException() instanceof DBConnection.NoConnectionException) {
+                PasswordManager.showAlert("No Internet",
+                        "Cannot load Recycle Bin. Please check your connection.");
+            } else {
+                task.getException().printStackTrace();
+                PasswordManager.showAlert("Error", "Something went wrong.");
+            }
+        });
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
     }
+
     // =========================================================
     // RECYCLE BIN — password required
     // =========================================================
     @FXML
     private void handleRecycleBin() {
-
         if (!PasswordGuard.verify(
                 dashboardTitleLabel.getScene().getWindow(),
                 "Access Recycle Bin",
                 "Enter admin password to access the Recycle Bin:")) return;
 
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/RecycleBin.fxml"));
-            Parent root = loader.load();
+        setGridBusy(true);
+        Task<Object[]> task = new Task<>() {
+            @Override
+            protected Object[] call() throws Exception {
+                return new Object[]{ lostDAO.getDeleted(), foundDAO.getDeleted() };
+            }
+        };
+        task.setOnSucceeded(e -> {
+            setGridBusy(false);
+            try {
+                @SuppressWarnings("unchecked")
+                java.util.List<LostItem>  dl = (java.util.List<LostItem>)  task.getValue()[0];
+                @SuppressWarnings("unchecked")
+                java.util.List<FoundItem> df = (java.util.List<FoundItem>) task.getValue()[1];
 
-            RecyclebinController ctrl = loader.getController();
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/view/RecycleBin.fxml"));
+                Parent root = loader.load();
+                RecyclebinController ctrl = loader.getController();
+                ctrl.load(dl, df);
 
-            ctrl.load(
-                    lostDAO.getDeleted(),
-                    foundDAO.getDeleted()
-            );
+                Stage stage = new Stage();
+                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.setTitle("Recycle Bin");
+                stage.setScene(new Scene(root));
+                stage.showAndWait();
 
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Recycle Bin");
-            stage.setScene(new Scene(root));
-            stage.showAndWait();
+                refreshStatsAsync(showingArchive);
+                applyFiltersAsync();
 
-            loadDashboard();
-
-        } catch (DBConnection.NoConnectionException e) {
-
-            PasswordManager.showAlert(
-                    "No Internet",
-                    "Cannot load Recycle Bin. Please check your connection."
-            );
-
-        } catch (IOException e) {
-
-            e.printStackTrace();
-            PasswordManager.showAlert(
-                    "Error",
-                    "Failed to open Recycle Bin."
-            );
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-            PasswordManager.showAlert(
-                    "Error",
-                    "Something went wrong."
-            );
-        }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                PasswordManager.showAlert("Error", "Failed to open Recycle Bin.");
+            }
+        });
+        task.setOnFailed(e -> {
+            setGridBusy(false);
+            if (task.getException() instanceof DBConnection.NoConnectionException) {
+                PasswordManager.showAlert("No Internet",
+                        "Cannot load Recycle Bin. Please check your connection.");
+            } else {
+                task.getException().printStackTrace();
+                PasswordManager.showAlert("Error", "Something went wrong.");
+            }
+        });
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
     }
+
     // =========================================================
     // SETTINGS / HELP
     // =========================================================
@@ -715,11 +694,9 @@ public class AdminController {
     }
 
     // =========================================================
-    // HELPERS — paste this over your existing openItemDialog()
+    // ITEM DIALOG — open detail view, refresh after close
     // =========================================================
     private void openItemDialog(Object item) {
-
-        // Decide which view to open based on record status
         String recordStatus = "";
         if (item instanceof LostItem lost)   recordStatus = lost.getRecordStatus();
         if (item instanceof FoundItem found) recordStatus = found.getRecordStatus();
@@ -746,13 +723,6 @@ public class AdminController {
             stage.setScene(new Scene(root));
             stage.showAndWait();
 
-            if (showingArchive) {
-                refreshStats();
-                applyFilters();
-            } else {
-                loadDashboard();
-            }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -772,6 +742,10 @@ public class AdminController {
             stage.setResizable(false);
             stage.setScene(new Scene(root));
             stage.showAndWait();
+
+            // Dashboard already refreshed inside PostItemFormController.handleResult()
+            // via adminController.refreshDashboard() — no double-refresh needed
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -792,31 +766,76 @@ public class AdminController {
         }
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    // =========================================================
+    // SORT HELPERS (background thread)
+    // =========================================================
+    private void sortCombined(List<Object> items, String sort) {
+        if ("name_asc".equals(sort) || "name_desc".equals(sort)) {
+            items.sort((a, b) -> {
+                String na = getName(a).toLowerCase();
+                String nb = getName(b).toLowerCase();
+                return "name_desc".equals(sort) ? nb.compareTo(na) : na.compareTo(nb);
+            });
+        } else {
+            items.sort((a, b) -> {
+                java.time.LocalDateTime ca = getCreatedAt(a);
+                java.time.LocalDateTime cb = getCreatedAt(b);
+                if (ca == null && cb == null) return 0;
+                if (ca == null) return 1;
+                if (cb == null) return -1;
+                return "oldest".equals(sort) ? ca.compareTo(cb) : cb.compareTo(ca);
+            });
+        }
+    }
+
+    private void sortCombinedArchive(List<Object> items, String sort) {
+        if ("name_asc".equals(sort) || "name_desc".equals(sort)) {
+            items.sort((a, b) -> {
+                String na = getName(a).toLowerCase();
+                String nb = getName(b).toLowerCase();
+                return "name_desc".equals(sort) ? nb.compareTo(na) : na.compareTo(nb);
+            });
+        } else {
+            items.sort((a, b) -> {
+                java.time.LocalDateTime aa = getArchivedAt(a);
+                java.time.LocalDateTime ab = getArchivedAt(b);
+                if (aa == null && ab == null) return 0;
+                if (aa == null) return 1;
+                if (ab == null) return -1;
+                return "oldest".equals(sort) ? aa.compareTo(ab) : ab.compareTo(aa);
+            });
+        }
+    }
+
+    private String getName(Object o) {
+        if (o instanceof LostItem  l) return l.getItemName();
+        if (o instanceof FoundItem f) return f.getItemName();
+        return "";
+    }
+    private java.time.LocalDateTime getCreatedAt(Object o) {
+        if (o instanceof LostItem  l) return l.getCreatedAt();
+        if (o instanceof FoundItem f) return f.getCreatedAt();
+        return null;
+    }
+    private java.time.LocalDateTime getArchivedAt(Object o) {
+        if (o instanceof LostItem  l) return l.getArchivedAt();
+        if (o instanceof FoundItem f) return f.getArchivedAt();
+        return null;
     }
 
     // =========================================================
-    // INFO DIALOG METHODS FOR QUICK LINKS
+    // INFO DIALOG CONTENT
     // =========================================================
     private void showInfoDialog(String title, String content) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/InfoDialog.fxml"));
             Parent root = loader.load();
-
             InfoDialogController controller = loader.getController();
             controller.setContent(title, content);
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(title);
-
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
+            stage.setScene(new Scene(root));
             stage.setWidth(600);
             stage.setHeight(550);
             stage.setResizable(false);
@@ -886,11 +905,11 @@ public class AdminController {
                 "3. Data Storage and Security\n" +
                 "• All data is stored in a cloud database\n" +
                 "• Admin passwords are hashed using industry-standard algorithms (bcrypt)\n" +
-                "• Personal information is treated as sensitive data (NFR-19)\n" +
+                "• Personal information is treated as sensitive data\n" +
                 "• No data is shared with third parties\n\n" +
                 "4. Data Retention\n" +
                 "• Active item records are retained until archived or deleted\n" +
-                "• Archived records are kept indefinitely for historical reference (NFR-20)\n" +
+                "• Archived records are kept indefinitely for historical reference\n" +
                 "• Claimant information is retained as part of the archived record\n\n" +
                 "5. Your Rights\n" +
                 "• You may request correction of inaccurate information by contacting the administrator\n" +

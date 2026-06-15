@@ -4,6 +4,8 @@ import dao.AuditLogDAO;
 import dao.ClaimDAO;
 import dao.FoundItemDAO;
 import dao.LostItemDAO;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -331,30 +333,37 @@ public class PostItemViewArchiveController {
                 "Restore Item",
                 "Enter admin password to restore this item:")) return;
 
-        try {
-            if (existingLost != null) {
-                lostDAO.restore(existingLost.getId());
-                auditDAO.insertLog(existingLost.getId(), "Lost",
-                        "Restored", "admin",
-                        "{\"record_status\": \"Archived\"}",
-                        "{\"record_status\": \"Active\"}");
-            } else if (existingFound != null) {
-                foundDAO.restore(existingFound.getId());
-                auditDAO.insertLog(existingFound.getId(), "Found",
-                        "Restored", "admin",
-                        "{\"record_status\": \"Archived\"}",
-                        "{\"record_status\": \"Active\"}");
+        Task<Void> task = new Task<>() {
+            @Override protected Void call() throws Exception {
+                if (existingLost != null) {
+                    lostDAO.restore(existingLost.getId());
+                    auditDAO.insertLog(existingLost.getId(), "Lost",
+                            "Restored", "admin",
+                            "{\"record_status\": \"Archived\"}",
+                            "{\"record_status\": \"Active\"}");
+                } else if (existingFound != null) {
+                    foundDAO.restore(existingFound.getId());
+                    auditDAO.insertLog(existingFound.getId(), "Found",
+                            "Restored", "admin",
+                            "{\"record_status\": \"Archived\"}",
+                            "{\"record_status\": \"Active\"}");
+                }
+                return null;
             }
+        };
+        task.setOnSucceeded(e -> {
             if (adminController != null) adminController.refreshDashboard();
             handleClose();
-
-        } catch (DBConnection.NoConnectionException e) {
-            PasswordManager.showAlert("No Internet",
-                    "Please connect to the Internet and try again.");
-        } catch (Exception e) {
-            PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
-            e.printStackTrace();
-        }
+        });
+        task.setOnFailed(e -> {
+            if (task.getException() instanceof DBConnection.NoConnectionException) {
+                PasswordManager.showAlert("No Internet", "Please connect to the Internet and try again.");
+            } else {
+                task.getException().printStackTrace();
+                PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
+            }
+        });
+        new Thread(task) {{ setDaemon(true); }}.start();
     }
 
     // =========================================================
@@ -378,30 +387,38 @@ public class PostItemViewArchiveController {
 
         confirm.showAndWait().ifPresent(response -> {
             if (response != ButtonType.OK) return;
-            try {
-                if (existingLost != null) {
-                    lostDAO.delete(existingLost.getId());
-                    auditDAO.insertLog(existingLost.getId(), "Lost",
-                            "Deleted", "admin",
-                            "{\"record_status\": \"Archived\"}",
-                            "{\"record_status\": \"Deleted\"}");
-                } else if (existingFound != null) {
-                    foundDAO.delete(existingFound.getId());
-                    auditDAO.insertLog(existingFound.getId(), "Found",
-                            "Deleted", "admin",
-                            "{\"record_status\": \"Archived\"}",
-                            "{\"record_status\": \"Deleted\"}");
+
+            Task<Void> task = new Task<>() {
+                @Override protected Void call() throws Exception {
+                    if (existingLost != null) {
+                        lostDAO.delete(existingLost.getId());
+                        auditDAO.insertLog(existingLost.getId(), "Lost",
+                                "Deleted", "admin",
+                                "{\"record_status\": \"Archived\"}",
+                                "{\"record_status\": \"Deleted\"}");
+                    } else if (existingFound != null) {
+                        foundDAO.delete(existingFound.getId());
+                        auditDAO.insertLog(existingFound.getId(), "Found",
+                                "Deleted", "admin",
+                                "{\"record_status\": \"Archived\"}",
+                                "{\"record_status\": \"Deleted\"}");
+                    }
+                    return null;
                 }
+            };
+            task.setOnSucceeded(e -> {
                 if (adminController != null) adminController.refreshDashboard();
                 handleClose();
-
-            } catch (DBConnection.NoConnectionException e) {
-                PasswordManager.showAlert("No Internet",
-                        "Please connect to the Internet and try again.");
-            } catch (Exception e) {
-                PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
-                e.printStackTrace();
-            }
+            });
+            task.setOnFailed(e -> {
+                if (task.getException() instanceof DBConnection.NoConnectionException) {
+                    PasswordManager.showAlert("No Internet", "Please connect to the Internet and try again.");
+                } else {
+                    task.getException().printStackTrace();
+                    PasswordManager.showAlert("Error", "Something went wrong. Please try again.");
+                }
+            });
+            new Thread(task) {{ setDaemon(true); }}.start();
         });
     }
 
