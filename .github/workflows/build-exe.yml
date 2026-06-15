@@ -41,7 +41,7 @@ jobs:
           path: target/dist/*.exe
 
   build-mac:
-    runs-on: macos-latest
+    runs-on: macos-13
 
     steps:
       - name: Checkout code
