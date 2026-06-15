@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<VBox fx:id="dialogRoot" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="607.0" prefWidth="688.0" spacing="15.0"
-      style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 5; -fx-border-radius: 5;"
-      xmlns="http://javafx.com/javafx/17.0.12"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="controller.PostItemFormController">
+<VBox fx:id="dialogRoot" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="612.0" prefWidth="688.0" spacing="15.0" style="-fx-background-color: white; -fx-border-color: #710912; -fx-border-width: 3; -fx-background-radius: 5; -fx-border-radius: 5;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.PostItemFormController">
     <padding>
         <Insets bottom="25.0" left="25.0" right="25.0" top="20.0" />
     </padding>
@@ -22,17 +29,20 @@
                 <Label fx:id="titleLabel" style="-fx-font-weight: bold;" text="ITEM INFORMATION" textFill="#710912">
                     <font><Font size="22.0" /></font>
                 </Label>
-                <Region HBox.hgrow="ALWAYS" />
-                <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-cursor: hand;" textFill="#710912">
-                    <font><Font name="System Bold" size="18.0" /></font>
-                </Button>
+      
+                                         <!-- Note: Either Contact Number or Email is required -->
+                 <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="16.0" prefWidth="402.0" style="-fx-font-style: italic; -fx-font-size: 11px;" text="* Either Contact Number or Email is required" textAlignment="RIGHT" textFill="#710912">
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+            </Label>
             </children>
         </HBox>
 
         <Separator />
 
         <!-- Scrollable Content -->
-        <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" prefHeight="435.0" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+        <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" prefHeight="435.0" prefWidth="632.0" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
             <content>
                 <GridPane hgap="20.0" style="-fx-background-color: white;" vgap="15.0">
                     <columnConstraints>
@@ -47,7 +57,7 @@
                                 <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Item Information" textFill="#710912" />
 
                                 <!-- Item Name with red asterisk only -->
-                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                <HBox alignment="CENTER_LEFT" spacing="0">
                                     <Label text="Item Name " textFill="#5b5b5b">
                                         <font><Font name="System Bold" size="13.0" /></font>
                                     </Label>
@@ -58,7 +68,7 @@
                                 <TextField fx:id="itemNameField" promptText="Item name" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
                                 <!-- Category with red asterisk only -->
-                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                <HBox alignment="CENTER_LEFT" spacing="0">
                                     <Label text="Category " textFill="#5b5b5b">
                                         <font><Font name="System Bold" size="13.0" /></font>
                                     </Label>
@@ -69,7 +79,7 @@
                                 <ComboBox fx:id="categoryPicker" promptText="Select Category" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
                                 <!-- Color with red asterisk only -->
-                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                <HBox alignment="CENTER_LEFT" spacing="0">
                                     <Label text="Color " textFill="#5b5b5b">
                                         <font><Font name="System Bold" size="13.0" /></font>
                                     </Label>
@@ -83,9 +93,7 @@
                                 <Label text="Item Type" textFill="#5b5b5b">
                                     <font><Font name="System Bold" size="13.0" /></font>
                                 </Label>
-                                <Label fx:id="itemTypeLabel" prefHeight="31.0" prefWidth="76.0"
-                                       style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5; -fx-padding: 6 10 6 10;"
-                                       text="—" textFill="#333333" />
+                                <Label fx:id="itemTypeLabel" prefHeight="31.0" prefWidth="76.0" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5; -fx-padding: 6 10 6 10;" text="—" textFill="#333333" />
                             </children>
                         </VBox>
 
@@ -95,7 +103,7 @@
                                 <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Report Information" textFill="#710912" />
 
                                 <!-- Reported By with red asterisk only -->
-                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                <HBox alignment="CENTER_LEFT" spacing="0">
                                     <Label text="Reported By " textFill="#5b5b5b">
                                         <font><Font name="System Bold" size="13.0" /></font>
                                     </Label>
@@ -103,26 +111,22 @@
                                         <font><Font name="System Bold" size="13.0" /></font>
                                     </Label>
                                 </HBox>
-                                <TextField fx:id="reporterNameField" prefHeight="27.0" prefWidth="375.0"
-                                           promptText="Lastname, Firstname M.I."
-                                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+                                <TextField fx:id="reporterNameField" prefHeight="27.0" prefWidth="375.0" promptText="Lastname, Firstname M.I." style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
                                 <!-- Contact Number (no asterisk) -->
                                 <Label text="Contact Number" textFill="#5b5b5b">
                                     <font><Font name="System Bold" size="13.0" /></font>
                                 </Label>
-                                <TextField fx:id="contactNumberField" promptText="Contact Number"
-                                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+                                <TextField fx:id="contactNumberField" promptText="Contact Number" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
                                 <!-- Email (no asterisk) -->
                                 <Label text="Email" textFill="#5b5b5b">
                                     <font><Font name="System Bold" size="13.0" /></font>
                                 </Label>
-                                <TextField fx:id="emailField" promptText="Email"
-                                           style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+                                <TextField fx:id="emailField" promptText="Email" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
 
                                 <!-- Date Lost / Date Found with red asterisk only -->
-                                <HBox spacing="0" alignment="CENTER_LEFT">
+                                <HBox alignment="CENTER_LEFT" spacing="0">
                                     <Label fx:id="itemDateLabel" text="Date Lost " textFill="#5b5b5b">
                                         <font><Font name="System Bold" size="13.0" /></font>
                                     </Label>
@@ -130,30 +134,21 @@
                                         <font><Font name="System Bold" size="13.0" /></font>
                                     </Label>
                                 </HBox>
-                                <DatePicker fx:id="itemDatePicker" promptText="Select Date"
-                                            style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
+                                <DatePicker fx:id="itemDatePicker" promptText="Select Date" style="-fx-background-color: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" />
                             </children>
                         </VBox>
 
                         <!-- Description - Full Width -->
-                        <TextArea fx:id="descArea" prefHeight="85.0"
-                                  promptText="Description * (minimum 10 characters) - Add details (Last location, distinguishing features)..."
-                                  style="-fx-control-inner-background: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;"
-                                  wrapText="true"
-                                  GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                        <TextArea fx:id="descArea" prefHeight="85.0" promptText="Description * (minimum 10 characters) - Add details (Last location, distinguishing features)..." style="-fx-control-inner-background: #F4F4F4; -fx-border-color: #D3D3D3; -fx-border-radius: 5;" wrapText="true" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
 
                         <!-- Image Upload Section -->
-                        <VBox alignment="CENTER" onMouseClicked="#handleUploadImage" spacing="10.0"
-                              style="-fx-border-color: #710912; -fx-border-style: dashed; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-color: #FFF9F9; -fx-cursor: hand;"
-                              GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                        <VBox alignment="CENTER" onMouseClicked="#handleUploadImage" spacing="10.0" style="-fx-border-color: #710912; -fx-border-style: dashed; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-color: #FFF9F9; -fx-cursor: hand;" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
                             <children>
-                                <Label fx:id="imagePlaceholderLabel" text="📷 Click to upload item image" textFill="#710912">
+                                <Label fx:id="imagePlaceholderLabel" prefHeight="17.0" prefWidth="161.0" text="📷 Click to upload item image" textFill="#710912">
                                     <font><Font name="System Italic" size="12.0" /></font>
                                 </Label>
-                                <ImageView fx:id="previewImageView" fitHeight="100.0" fitWidth="100.0" preserveRatio="true" visible="false" />
-                                <Button fx:id="removeImageButton" managed="false" onAction="#handleRemoveImage"
-                                        style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-size: 11px; -fx-background-radius: 5; -fx-cursor: hand;"
-                                        text="REMOVE IMAGE" visible="false" />
+                                <ImageView fx:id="previewImageView" fitHeight="157.0" fitWidth="368.0" preserveRatio="true" visible="false" />
+                                <Button fx:id="removeImageButton" managed="false" onAction="#handleRemoveImage" style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-size: 11px; -fx-background-radius: 5; -fx-cursor: hand;" text="REMOVE IMAGE" visible="false" />
                             </children>
                             <padding>
                                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
@@ -161,15 +156,11 @@
                         </VBox>
                     </children>
 
-                    <!-- Note: Either Contact Number or Email is required -->
-                    <Label text="* Either Contact Number or Email is required" textFill="#710912"
-                           style="-fx-font-style: italic; -fx-font-size: 11px;"
-                           GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="3" />
-
                     <rowConstraints>
                         <RowConstraints />
                         <RowConstraints maxHeight="100.0" minHeight="80.0" prefHeight="85.0" />
                         <RowConstraints maxHeight="-Infinity" minHeight="120.0" percentHeight="0.0" />
+                  <RowConstraints />
                     </rowConstraints>
                 </GridPane>
             </content>
@@ -180,12 +171,8 @@
         <!-- Bottom Buttons — only Save and Cancel -->
         <HBox alignment="CENTER_RIGHT" spacing="10.0">
             <children>
-                <Button fx:id="saveButton" onAction="#handleSave"
-                        style="-fx-background-color: #710912; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
-                        text="SUBMIT REPORT" />
-                <Button onAction="#handleClose"
-                        style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;"
-                        text="CANCEL" />
+                <Button fx:id="saveButton" onAction="#handleSave" style="-fx-background-color: #710912; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="SUBMIT REPORT" />
+                <Button onAction="#handleClose" style="-fx-background-color: #A5A5A5; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5; -fx-cursor: hand;" text="CANCEL" />
             </children>
         </HBox>
     </children>
